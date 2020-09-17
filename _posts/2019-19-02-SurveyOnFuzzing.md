@@ -2,15 +2,16 @@
 layout: post
 title: Fuzzing Survey.
 date: 2019-02-19 13:32:20 +0300
-description: Fuzzing is an automated technique for software testing. I felt overwhelmed when i started reading about it ... a lot of fuzzing approaches, concepts, ideas, classifications. I will try to put in this blog entry some of the basics ideas about fuzzing and state of the art fuzzers, as well as pros and cons of those fuzzers and techniques to solve specific fuzzers problems.
+description: Fuzzing is an automated technique for software testing. I will try to put in this blog entry some of the basics ideas about fuzzing, as well as pros and cons of some fuzzers and techniques to face specific issues.
 
 img: virus.png # Add image post (optional)
 
 fig-caption: # Add figcaption (optional)
 tags: [Fuzzing, Angora, AFL, Java]
+comments: true
 ---
 
-Fuzzing is an automated technique for software testing. I felt overwhelmed when I started reading about it, a lot of fuzzing testers, concepts, ideas, classifications. I will try to put in this blog entry some of the basics ideas about fuzzing and state of the art fuzzers, as well as pros and cons of those fuzzers and techniques to solve specific fuzzers problems.
+Fuzzing is an automated technique for software testing. I will try to put in this blog entry some of the basics ideas about fuzzing, as well as pros and cons of some fuzzers and techniques to face specific issues
 
 Let see some literature definitions to define fuzzing:
 
@@ -22,7 +23,7 @@ Let see some literature definitions to define fuzzing:
 
 In other words, fuzzing is a negative testing technique, the main idea is to flush the program input with a random (intelligent or not) stream of data to detect failures or exploitable issues in the program code. The key is to deliver this data through different communication interfaces in the program.
 
-Fuzzing is not a replacement for code auditing, reverse engineering or other software quality assurance processes. It is important to say that there is no silver bullet for BUG detection, but the literature [1] shows that the 80% percents of fuzzed code fails, and then, a fix can be made.
+Fuzzing is not a replacement for code auditing, reverse engineering or other software quality assurance processes. It is important to say that there is no silver bullet for BUG detection, but, the literature [1] shows that the 80% percents of fuzzed code fails, and then, a fix can be made.
 
 
 ## Brief History
@@ -80,17 +81,14 @@ applying mutations inside the process
 
 ### Classification
 
-This is somewhat difficult because no one group perfectly agrees on the definitions related to fuzzing.
+This is somehow difficult because no one group perfectly agrees on the definitions related to fuzzing. Here are the main three categories for fuzzings.
 
-- Black box fuzzer
-  - Tends to focus on final requirements, system stability, and exposed interfaces. The interfaces
+- A black box fuzzer tends to focus on final requirements, system stability, and exposed interfaces. The interfaces
 to a system can consist of, for example: User interfaces: GUI, command line; Network protocols; Data structures such as files; System APIs such as system calls and device drivers (how to detect the input interface? Lets see this later). These kind of fuzzers executes the program as a functional abstraction. As a good thing, they compile the real code for a real environment, but the search gets difficult to explore due to infinite space measurement.
 
-- White box fuzzer
-  - You have full access to the code, like AFL, you build the program with specific fuzzer sentences and listen for feedbacks. It is the only way to get 100% of code coverage, even when some black-box techniques gets a very good accuracy
+- With a white box fuzzer, the full access to the source code is granted. Usually, this fuzzers are coverage based. Then the program is instrumented specific coverage instructions, having a third-party player listening for feedbacks, for example AFL (take a look to Kelinci). This is the only way to get 100% of coverage, even when some black-box techniques gets a very good accuracy
 
-- Gray box fuzzer:
-  - Gray box fuzzer combines some things of the previous classifications. An approach could be implement a testing interface in the final application binary to be used by the fuzzer with some builtin feedbacks in the code. It uses the internals of the software to assist in the design of the tests of the external interfaces.  In some cases, grammars are used to generate the well-formed inputs
+- A gray box fuzzer combines some things of the previous classifications. An approach could be to implement a testing interface in the final application binary to be used by the fuzzer with some builtin feedbacks in the code. It uses the internals of the software to assist in the design of the tests of the external interfaces.  In some cases, grammars are used to generate the well-formed inputs
 
 ### Fuzzer input methods
 
@@ -107,13 +105,13 @@ these inputs. These valid inputs may consist of a network packet capture or vali
 
 ### How to create a fuzzer?
 
-Basically, we can follow the pseudo algorithm below to construct a fuzzer
+We can follow the pseudo-code below to construct a fuzzer
 
 ```bash
 Input: Seed Corpus S
   repeat
     s = ChooseNext(S) // Search strategy
-    p = AssignEnergy(s) // Power schedule (How many fuzz the choosen seed?)
+    p = AssignEnergy(s) // Power schedule (How much to use the choosen seed?)
 
     for i = 1 to p
       s1 = MUTATE_INPUT(s)
@@ -134,7 +132,7 @@ The algorithm has four important pieces:
 It is the same structure of a basic/literature genetic algorithm. <a href="#12">[12]</a> and <a href="#13">[13]</a> shows very encouraging results making changes in those cornerstones listed above.
 
 
-### State of the art fuzzers
+### Some available fuzzers
 
 Modern fuzzers do not just focus solely on test generation. Fuzzers contain different functionalities and features that will help in both test automation and in failure identification. 
 
@@ -179,12 +177,14 @@ AFL is the the most successful vulnerability detection tool to date. Many resear
 
 ### What about languages?
  
-Choice of programming language also has an impact on the likelihood of vulnerabilities being present as newer programming languages often make a considerable effort to prevent developers accidentally introducing vulnerabilities. For example, compiled C programs do not automatically perform bounds checking at runtime whereas Python, Ruby, C# or Java programs all do. 
+The choice of programming language also has an impact on the likelihood of vulnerabilities. Newer programming languages often make a considerable effort to prevent developers accidentally introducing vulnerabilities. For example, compiled C programs do not automatically perform bounds checking at runtime whereas Python, Ruby, C# or Java programs all do. 
 
 **Why are fuzzers focused in c/c++ programs  mostly?**
   
-C/C++ is often chosen when speed and efficiency are important and so many key applications, including operating system internals and also web browsers, are written in that language. Taking in count the previous paragraph, implementing bounds checking in any language compiler put an extra branch in the evaluation. 
-     
+C/C++ is often chosen when speed and efficiency are important and so many key applications. Operating system internals and also web browsers, are written in that language. Taking in count the previous paragraph, implementing bounds checking in any language compiler put an extra instructions in the low-level code evaluation. 
+
+That's the main reason (I think) thats make fuzzers been focused to c/c++ programs, because there are more "core" programs written in such languages ... speed needs.
+
   
 #### Java, for an instance...
 
@@ -212,8 +212,6 @@ With over 95% of all enterprise desktops in the world running Java, there are se
 - Stored XSS
 - XPath Injection
 
-Even, when attackers understand that internal buffer overflow attacks are not easy, have demonstrated that a type confusion attack could exploit a weakness by using a public field like a private field – as early as Java 5. This made Java’s Security Manager accessible to manipulation or foul play (Long, 2005). This is also known as a language-based attack <a href="#7">[7]</a>.
-
 
 **Can these exploits/issues be detected with the use of fuzzing ?**
 
@@ -232,13 +230,13 @@ Finding well-known security issues for Java code, such as Java deserialization v
 
 Differential fuzzing may be another good starting point to solve injection issues, because, we have a lot of proved libraries that probably do the same as the desired application to test.
 
-**In interpreted languages... Must be fuzzed the interpreter too?**
+**In interpreted languages... Must the interpreter be fuzzed too?**
 
 Arbitrary Java code as input for the JVM... This could be helpful in more exotic scenarios, for example when you need to escape from a sandboxed JVM. In most other scenarios this attack vector is probably just unrealistic, as an attacker would be executing Java code already.
 
-What about injecting data in built-in classes (such as strings)? Maybe there is a deep deserialization issue waiting to wake up. 
+What about injecting data in built-in classes (such as strings)? Maybe there is a deep hidden  deserialization issue. 
 
-Not the same analysis if we use Javascript as a target. Fuzz javascript interpreters using javascript scripts as inputs could bring better results due to fast browsers evolution and new features appeared.
+Not the same analysis if we use Javascript as a target. Fuzz javascript interpreters using javascript as inputs could bring better results due to fast browsers evolution and new features appeared.
 
 ### Bibliography
 

@@ -8,11 +8,12 @@ img: flash.jpg # Add image post (optional)
 
 fig-caption: # Add figcaption (optional)
 tags: [Fuzzing, JS, Graal, Coverage]
+comments: true
 ---
 
-I am trying to make and easy and understandable tool, to measure things like code coverage, correctness attraction experimentation and code analysis in JS scripts, but, without modifying the JS code itself.
+I would like to try to make a simple instrumentation tool, to measure things like code coverage, correctness attraction experimentation and code analysis in JS programs, but, without modifying the JS code itself.
 
-Do you remember <a href="https://www.graalvm.org/docs/why-graal/" target="_blank">Graal</a> and Truffle ? Well ... there is an <a href="https://www.graalvm.org/docs/why-graal/" target="_blank">open source JS engine implementation</a>. Why GraalJS instead V8 source code ? Because we love Java and I want to implement this idea in the fastest way, besides that, the GraalJS architecture is more understandable than the C one. 
+Do you remember <a href="https://www.graalvm.org/docs/why-graal/" target="_blank">Graal</a> and Truffle ? Well ... there is an <a href="https://www.graalvm.org/docs/why-graal/" target="_blank">open source JS engine implementation</a>. Why GraalJS instead V8 source code ? Because we love Java and I want to implement this idea in the fastest way, besides that, the GraalJS architecture is more understandable than the C one :(. 
 
 All languages can be translated to an AST (Abstract Syntax Tree) and then the compiler traverses it at least once. Interpreter evaluation of code visit each node of the AST executing the specifi semantic of nodes, for example, a math operation node:
 
@@ -26,7 +27,7 @@ What if we want to count the *sum* operations in any JS script? The simplest ide
 **Registering function entering**
 
 
-For a concrete practical example, I want to measure the function coverage of a JS script execution. The architecture of the GraalJS implementation ensures each AST node implements his own behavior. So, maybe there is a "function node" or something like that.
+For a concrete example, I want to measure the function coverage of a JS script execution. The architecture of the GraalJS implementation ensures each AST node implements his own behavior. So, maybe there is a "function node" or something like that.
 
 So, first, we look for the <a href="https://github.com/graalvm/graaljs/blob/master/graal-js/src/com.oracle.truffle.js/src/com/oracle/truffle/js/nodes/function/FunctionBodyNode.java" target="_blank">Function Node implementation</a>
 
@@ -66,7 +67,7 @@ public final class FunctionBodyNode extends AbstractBodyNode {
 }
 ```
 
-In the code showed above, you can find a method with name *execute*, that is the entrypoint for the AST evaluator to execute the node behavior. Then, we can inject the function coverage instrumentation there.
+In the code above, you can find a method with name *execute*, that is the entrypoint for the AST evaluator to execute the node behavior. Then, we can inject the function coverage instrumentation there.
 
 
 ```java
@@ -102,7 +103,7 @@ main();
 ```
 
 
-And voila !!!.
+And voila !
 
 
 <img src='/assets/img/resultJS.png'/>

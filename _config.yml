@@ -1,35 +1,195 @@
-title: Javier's Blog
-description: #
-baseurl: "" # the subpath of your site, e.g. /blog
-url: "http://jacarte.github.io" # the base hostname & protocol for your site, e.g. http://example.com
-site-twitter: #if your site has a twitter account, enter it here
+# -----------------------------------------------------------------------------
+# Site settings
+# -----------------------------------------------------------------------------
 
-# Author Settings
-author: Javier Cabrera # add your name
-author-img: pic.png # add your photo
-about-author: PhD student at KTH Royal Institute of Technology. Software randomization against side channel attacks. Trustworthy Fullstack Computing (TRUSTFULL)  # add description
-social-twitter: # add your Twitter handle
-social-facebook: # add your Facebook handle
-social-github: jacarte # add your Github handle
-social-linkedin: # add your Linkedin handle
-social-email: javierca@kth.se # add your Email address
+title: blank # the website title (if blank, full name will be used instead)
+first_name: Javier
+middle_name: 
+last_name: Cabrera Arteaga
+email: javierca@kth.se
+description: > # the ">" symbol means to ignore newlines until "footer_text:"
+  Personal blog
+footer_text: >
+  Powered by <a href="http://jekyllrb.com/" target="_blank">Jekyll</a> with <a href="https://github.com/alshedivat/al-folio">al-folio</a> theme.
+  Hosted by <a href="https://pages.github.com/" target="_blank">GitHub Pages</a>.
+  Photos from <a href="https://unsplash.com" target="_blank">Unsplash</a>.
 
-future: true
+url:  # the base hostname & protocol for your site
+# baseurl: # the subpath of your site, e.g. /blog/
+last_updated: false # set to true if you want to display last updated in the footer
 
-# Disqus
-discus-identifier: jacarte-github-io # add your discus identifier
+# -----------------------------------------------------------------------------
+# Layout
+# -----------------------------------------------------------------------------
 
-# Tracker
-analytics: UA-127898106-1 # Google Analytics
+navbar_fixed: true
+footer_fixed: true
+# TODO: add layout settings (single page vs. multi-page)
 
-# Build Settings
+# -----------------------------------------------------------------------------
+# Open Graph
+# -----------------------------------------------------------------------------
+# Display links to the page with a preview object on social media.
+# To achieve this, change serve_og_meta to true and then provide the URL of the
+# preview image as the value of og_image.
+serve_og_meta: false # Include Open Graph meta tags in the HTML head
+og_image: # The site-wide (default for all links) Open Graph preview image
+
+# -----------------------------------------------------------------------------
+# Social integration
+# -----------------------------------------------------------------------------
+
+github_username: Jacarte # your GitHub user name
+twitter_username: Jacarte9212 # your Twitter handle
+linkedin_username: javier-cabrera-05565b12a # your LinkedIn user name
+scholar_userid: nmxBA5gAAAAJ # your Google Scholar ID
+orcid_id: https://orcid.org/0000-0001-9399-8647
+ # your ORCID ID
+medium_username: # your Medium username
+quora_username: # your Quora username
+publons_id: # your ID on Publons
+research_gate_profile: Javier_Cabrera15 # your profile on ResearchGate
+blogger_url: # your blogger URL
+
+contact_note: >
+  Contact me.
+
+google_analytics: UA-127898106-1 # out your google-analytics code
+discus-identifier: jacarte-github-io
+# -----------------------------------------------------------------------------
+# Blog
+# -----------------------------------------------------------------------------
+
+blog_name: Some thoughts  # your blog must have a name for it to show up in the nav bar
+blog_description: Some thoughts and ideas of mine
+permalink: /blog/:year/:title/
+
+# Pagination
+pagination:
+  enabled: true
+  total_posts: 10
+
+
+# Comments
+disqus_shortname: jacarte-github-io # put your disqus shortname
+
+# -----------------------------------------------------------------------------
+# Collections
+# -----------------------------------------------------------------------------
+
+collections:
+  news:
+    defaults:
+      layout: post
+    output: true
+    permalink: /news/:path/
+  projects:
+    output: true
+    permalink: /projects/:path/
+  
+  publications:
+    output: true
+    permalink: /publications/:path/
+
+news_limit: 5
+
+# -----------------------------------------------------------------------------
+# Jekyll settings
+# -----------------------------------------------------------------------------
+
+# Markdown and syntax highlight
 markdown: kramdown
+highlighter: rouge
+highlight_theme: github  # https://github.com/jwarby/jekyll-pygments-themes
+kramdown:
+  input: GFM
+  syntax_highlighter_opts:
+    css_class: 'highlight'
+    span:
+      line_numbers: false
+    block:
+      line_numbers: false
+      start_line: 1
+
+# Includes & excludes
+include: ['_pages']
+exclude: [vendor]
+
+# Plug-ins
 plugins:
-  - jekyll-sitemap
-  - jekyll-paginate
+  - jekyll-email-protect
+  - jekyll-paginate-v2
+  - jekyll/scholar
   - jemoji
+  # - bootstrap
+  # - material-sass
 
-paginate: 8
-paginate_path: "/page/:num"
+# -----------------------------------------------------------------------------
+# Jekyll Scholar
+# -----------------------------------------------------------------------------
 
-exclude: ["node_modules", "gulpfile.js", "package.json", "yarn.lock"]
+scholar:
+
+  last_name: Einstein
+
+  style: apa
+  locale: en
+
+  source: /_bibliography/
+  bibliography: papers.bib
+  bibliography_template: bib
+
+  replace_strings: true
+  join_strings: true
+
+  details_dir: bibliography
+  details_layout: bibtex.html
+  details_link: Details
+
+  query: "@*"
+
+# -----------------------------------------------------------------------------
+# Optional Features
+# -----------------------------------------------------------------------------
+
+enable_google_analytics:  true
+enable_katex:             true
+enable_mansory:           true
+enable_progressbar:       true
+enable_tooltips:          true
+show_social_icons:        true
+
+# -----------------------------------------------------------------------------
+# Library versions
+# -----------------------------------------------------------------------------
+
+academicons:
+  version: "1.9.0"
+  integrity: "sha512-W4yqoT1+8NLkinBLBZko+dFB2ZbHsYLDdr50VElllRcNt2Q4/GSs6u71UHKxB7S6JEMCp5Ve4xjh3eGQl/HRvg=="
+bootstrap:
+  version: "4.5.2"
+  integrity:
+    css: "sha512-MoRNloxbStBcD8z3M/2BmnT+rg4IsMxPkXaGh2zD6LGNNFE80W3onsAhRcMAMrSoyWL9xD7Ert0men7vR8LUZg=="
+    js: "sha512-M5KW3ztuIICmVIhjSqXe01oV2bpe248gOxqmlcYrEzAvws7Pw3z6BK0iGbrwvdrUQUhi3eXgtxp5I8PDo9YfjQ=="
+fontawesome:
+  version: "5.14.0"
+  integrity: "sha512-1PKOgIY59xJ8Co8+NE6FZ+LOAZKjy+KY8iq0G4B3CyeY6wYHN3yt9PW0XpSriVlkMXe40PTKnXrLnZ9+fkDaog=="
+jquery:
+  version: "3.5.1"
+  integrity: "sha512-/DXTXr6nQodMUiq+IUJYCt2PPOUjrHJ9wFrqpJ3XkgPNOZVfMok7cRw6CSxyCQxXn6ozlESsSh1/sMCTF1rL/g=="
+katex:
+  version: "0.12.0"
+  integrity:
+    css: "sha512-h7nl+xz8wgDlNM4NqKEM4F1NkIRS17M9+uJwIGwuo8vGqIl4BhuCKdxjWEINm+xyrUjNCnK5dCrhM0sj+wTIXw=="
+    js: "sha512-/CMIhXiDA3m2c9kzRyd97MTb3MC6OVnx4TElQ7fkkoRghwDf6gi41gaT1PwF270W6+J60uTmwgeRpNpJdRV6sg=="
+mansory:
+  version: "4.2.2"
+  integrity: "sha256-Nn1q/fx0H7SNLZMQ5Hw5JLaTRZp0yILA/FRexe19VdI="
+mdb:
+  version: "4.19.1"
+  integrity:
+    css: "sha512-RO38pBRxYH3SoOprtPTD86JFOclM51/XTIdEPh5j8sj4tp8jmQIx26twG52UaLi//hQldfrh7e51WzP9wuP32Q=="
+    js: "sha512-Mug9KHKmroQFMLm93zGrjhibM2z2Obg9l6qFG2qKjXEXkMp/VDkI4uju9m4QKPjWSwQ6O2qzZEnJDEeCw0Blcw=="
+popper:
+  version: "2.4.4"
+  integrity: "sha512-eUQ9hGdLjBjY3F41CScH3UX+4JDSI9zXeroz7hJ+RteoCaY+GP/LDoM8AO+Pt+DRFw3nXqsjh9Zsts8hnYv8/A=="
