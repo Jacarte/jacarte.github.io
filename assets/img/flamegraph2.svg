@@ -1,0 +1,1782 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" width="1200" height="710" onload="init(evt)" viewBox="0 0 1200 710" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<!-- Flame graph stack visualization. See https://github.com/brendangregg/FlameGraph for latest version, and http://www.brendangregg.com/flamegraphs.html for examples. -->
+<!-- NOTES:  -->
+<defs>
+	<linearGradient id="background" y1="0" y2="1" x1="0" x2="0">
+		<stop stop-color="#eeeeee" offset="5%"/>
+		<stop stop-color="#eeeeb0" offset="95%"/>
+	</linearGradient>
+</defs>
+<style type="text/css">
+	.func_g:hover { stroke:black; stroke-width:0.5; cursor:pointer; }
+</style>
+<script type="text/ecmascript">
+<![CDATA[
+	var details, searchbtn, matchedtxt, svg;
+	function init(evt) {
+		details = document.getElementById("details").firstChild;
+		searchbtn = document.getElementById("search");
+		matchedtxt = document.getElementById("matched");
+		svg = document.getElementsByTagName("svg")[0];
+		searching = 0;
+	}
+
+	// mouse-over for info
+	function s(node) {		// show
+		info = g_to_text(node);
+		details.nodeValue = "Function: " + info;
+	}
+	function c() {			// clear
+		details.nodeValue = ' ';
+	}
+
+	// ctrl-F for search
+	window.addEventListener("keydown",function (e) {
+		if (e.keyCode === 114 || (e.ctrlKey && e.keyCode === 70)) {
+			e.preventDefault();
+			search_prompt();
+		}
+	})
+
+	// functions
+	function find_child(parent, name, attr) {
+		var children = parent.childNodes;
+		for (var i=0; i<children.length;i++) {
+			if (children[i].tagName == name)
+				return (attr != undefined) ? children[i].attributes[attr].value : children[i];
+		}
+		return;
+	}
+	function orig_save(e, attr, val) {
+		if (e.attributes["_orig_"+attr] != undefined) return;
+		if (e.attributes[attr] == undefined) return;
+		if (val == undefined) val = e.attributes[attr].value;
+		e.setAttribute("_orig_"+attr, val);
+	}
+	function orig_load(e, attr) {
+		if (e.attributes["_orig_"+attr] == undefined) return;
+		e.attributes[attr].value = e.attributes["_orig_"+attr].value;
+		e.removeAttribute("_orig_"+attr);
+	}
+	function g_to_text(e) {
+		var text = find_child(e, "title").firstChild.nodeValue;
+		return (text)
+	}
+	function g_to_func(e) {
+		var func = g_to_text(e);
+		// if there's any manipulation we want to do to the function
+		// name before it's searched, do it here before returning.
+		return (func);
+	}
+	function update_text(e) {
+		var r = find_child(e, "rect");
+		var t = find_child(e, "text");
+		var w = parseFloat(r.attributes["width"].value) -3;
+		var txt = find_child(e, "title").textContent.replace(/\([^(]*\)$/,"");
+		t.attributes["x"].value = parseFloat(r.attributes["x"].value) +3;
+
+		// Smaller than this size won't fit anything
+		if (w < 2*12*0.59) {
+			t.textContent = "";
+			return;
+		}
+
+		t.textContent = txt;
+		// Fit in full text width
+		if (/^ *$/.test(txt) || t.getSubStringLength(0, txt.length) < w)
+			return;
+
+		for (var x=txt.length-2; x>0; x--) {
+			if (t.getSubStringLength(0, x+2) <= w) {
+				t.textContent = txt.substring(0,x) + "..";
+				return;
+			}
+		}
+		t.textContent = "";
+	}
+
+	// zoom
+	function zoom_reset(e) {
+		if (e.attributes != undefined) {
+			orig_load(e, "x");
+			orig_load(e, "width");
+		}
+		if (e.childNodes == undefined) return;
+		for(var i=0, c=e.childNodes; i<c.length; i++) {
+			zoom_reset(c[i]);
+		}
+	}
+	function zoom_child(e, x, ratio) {
+		if (e.attributes != undefined) {
+			if (e.attributes["x"] != undefined) {
+				orig_save(e, "x");
+				e.attributes["x"].value = (parseFloat(e.attributes["x"].value) - x - 10) * ratio + 10;
+				if(e.tagName == "text") e.attributes["x"].value = find_child(e.parentNode, "rect", "x") + 3;
+			}
+			if (e.attributes["width"] != undefined) {
+				orig_save(e, "width");
+				e.attributes["width"].value = parseFloat(e.attributes["width"].value) * ratio;
+			}
+		}
+
+		if (e.childNodes == undefined) return;
+		for(var i=0, c=e.childNodes; i<c.length; i++) {
+			zoom_child(c[i], x-10, ratio);
+		}
+	}
+	function zoom_parent(e) {
+		if (e.attributes) {
+			if (e.attributes["x"] != undefined) {
+				orig_save(e, "x");
+				e.attributes["x"].value = 10;
+			}
+			if (e.attributes["width"] != undefined) {
+				orig_save(e, "width");
+				e.attributes["width"].value = parseInt(svg.width.baseVal.value) - (10*2);
+			}
+		}
+		if (e.childNodes == undefined) return;
+		for(var i=0, c=e.childNodes; i<c.length; i++) {
+			zoom_parent(c[i]);
+		}
+	}
+	function zoom(node) {
+		var attr = find_child(node, "rect").attributes;
+		var width = parseFloat(attr["width"].value);
+		var xmin = parseFloat(attr["x"].value);
+		var xmax = parseFloat(xmin + width);
+		var ymin = parseFloat(attr["y"].value);
+		var ratio = (svg.width.baseVal.value - 2*10) / width;
+
+		// XXX: Workaround for JavaScript float issues (fix me)
+		var fudge = 0.0001;
+
+		var unzoombtn = document.getElementById("unzoom");
+		unzoombtn.style["opacity"] = "1.0";
+
+		var el = document.getElementsByTagName("g");
+		for(var i=0;i<el.length;i++){
+			var e = el[i];
+			var a = find_child(e, "rect").attributes;
+			var ex = parseFloat(a["x"].value);
+			var ew = parseFloat(a["width"].value);
+			// Is it an ancestor
+			if (0 == 0) {
+				var upstack = parseFloat(a["y"].value) > ymin;
+			} else {
+				var upstack = parseFloat(a["y"].value) < ymin;
+			}
+			if (upstack) {
+				// Direct ancestor
+				if (ex <= xmin && (ex+ew+fudge) >= xmax) {
+					e.style["opacity"] = "0.5";
+					zoom_parent(e);
+					e.onclick = function(e){unzoom(); zoom(this);};
+					update_text(e);
+				}
+				// not in current path
+				else
+					e.style["display"] = "none";
+			}
+			// Children maybe
+			else {
+				// no common path
+				if (ex < xmin || ex + fudge >= xmax) {
+					e.style["display"] = "none";
+				}
+				else {
+					zoom_child(e, xmin, ratio);
+					e.onclick = function(e){zoom(this);};
+					update_text(e);
+				}
+			}
+		}
+	}
+	function unzoom() {
+		var unzoombtn = document.getElementById("unzoom");
+		unzoombtn.style["opacity"] = "0.0";
+
+		var el = document.getElementsByTagName("g");
+		for(i=0;i<el.length;i++) {
+			el[i].style["display"] = "block";
+			el[i].style["opacity"] = "1";
+			zoom_reset(el[i]);
+			update_text(el[i]);
+		}
+	}
+
+	// search
+	function reset_search() {
+		var el = document.getElementsByTagName("rect");
+		for (var i=0; i < el.length; i++) {
+			orig_load(el[i], "fill")
+		}
+	}
+	function search_prompt() {
+		if (!searching) {
+			var term = prompt("Enter a search term (regexp " +
+			    "allowed, eg: ^ext4_)", "");
+			if (term != null) {
+				search(term)
+			}
+		} else {
+			reset_search();
+			searching = 0;
+			searchbtn.style["opacity"] = "0.1";
+			searchbtn.firstChild.nodeValue = "Search"
+			matchedtxt.style["opacity"] = "0.0";
+			matchedtxt.firstChild.nodeValue = ""
+		}
+	}
+	function search(term) {
+		var re = new RegExp(term);
+		var el = document.getElementsByTagName("g");
+		var matches = new Object();
+		var maxwidth = 0;
+		for (var i = 0; i < el.length; i++) {
+			var e = el[i];
+			if (e.attributes["class"].value != "func_g")
+				continue;
+			var func = g_to_func(e);
+			var rect = find_child(e, "rect");
+			if (rect == null) {
+				// the rect might be wrapped in an anchor
+				// if nameattr href is being used
+				if (rect = find_child(e, "a")) {
+				    rect = find_child(r, "rect");
+				}
+			}
+			if (func == null || rect == null)
+				continue;
+
+			// Save max width. Only works as we have a root frame
+			var w = parseFloat(rect.attributes["width"].value);
+			if (w > maxwidth)
+				maxwidth = w;
+
+			if (func.match(re)) {
+				// highlight
+				var x = parseFloat(rect.attributes["x"].value);
+				orig_save(rect, "fill");
+				rect.attributes["fill"].value =
+				    "rgb(230,0,230)";
+
+				// remember matches
+				if (matches[x] == undefined) {
+					matches[x] = w;
+				} else {
+					if (w > matches[x]) {
+						// overwrite with parent
+						matches[x] = w;
+					}
+				}
+				searching = 1;
+			}
+		}
+		if (!searching)
+			return;
+
+		searchbtn.style["opacity"] = "1.0";
+		searchbtn.firstChild.nodeValue = "Reset Search"
+
+		// calculate percent matched, excluding vertical overlap
+		var count = 0;
+		var lastx = -1;
+		var lastw = 0;
+		var keys = Array();
+		for (k in matches) {
+			if (matches.hasOwnProperty(k))
+				keys.push(k);
+		}
+		// sort the matched frames by their x location
+		// ascending, then width descending
+		keys.sort(function(a, b){
+			return a - b;
+		});
+		// Step through frames saving only the biggest bottom-up frames
+		// thanks to the sort order. This relies on the tree property
+		// where children are always smaller than their parents.
+		var fudge = 0.0001;	// JavaScript floating point
+		for (var k in keys) {
+			var x = parseFloat(keys[k]);
+			var w = matches[keys[k]];
+			if (x >= lastx + lastw - fudge) {
+				count += w;
+				lastx = x;
+				lastw = w;
+			}
+		}
+		// display matched percent
+		matchedtxt.style["opacity"] = "1.0";
+		pct = 100 * count / maxwidth;
+		if (pct == 100)
+			pct = "100"
+		else
+			pct = pct.toFixed(1)
+		matchedtxt.firstChild.nodeValue = "Matched: " + pct + "%";
+	}
+	function searchover(e) {
+		searchbtn.style["opacity"] = "1.0";
+	}
+	function searchout(e) {
+		if (searching) {
+			searchbtn.style["opacity"] = "1.0";
+		} else {
+			searchbtn.style["opacity"] = "0.1";
+		}
+	}
+]]>
+</script>
+<rect x="0.0" y="0" width="1200.0" height="710.0" fill="url(#background)"/>
+<text text-anchor="middle" x="600.00" y="24" font-size="17" font-family="Verdana" fill="rgb(0,0,0)">Flame Graph</text>
+<text text-anchor="" x="10.00" y="693" font-size="12" font-family="Verdana" fill="rgb(0,0,0)" id="details"> </text>
+<text text-anchor="" x="10.00" y="24" font-size="12" font-family="Verdana" fill="rgb(0,0,0)" id="unzoom" onclick="unzoom()" style="opacity:0.0;cursor:pointer">Reset Zoom</text>
+<text text-anchor="" x="1090.00" y="24" font-size="12" font-family="Verdana" fill="rgb(0,0,0)" id="search" onmouseover="searchover()" onmouseout="searchout()" onclick="search_prompt()" style="opacity:0.1;cursor:pointer">Search</text>
+<text text-anchor="" x="1090.00" y="693" font-size="12" font-family="Verdana" fill="rgb(0,0,0)" id="matched"> </text>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (20 samples, 0.72%)</title><rect x="1058.7" y="213" width="8.6" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="1061.70" y="223.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::sort (843 samples, 30.55%)</title><rect x="45.5" y="389" width="360.5" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="48.50" y="399.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)">Ltarget/quicksort/QuickSortIntr:::sort</text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::sort (489 samples, 17.72%)</title><rect x="900.5" y="293" width="209.1" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="903.45" y="303.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)">Ltarget/quicksort/QuickSort..</text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::swap (2 samples, 0.07%)</title><rect x="356.4" y="197" width="0.9" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="359.43" y="207.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::sort (3 samples, 0.11%)</title><rect x="409.9" y="309" width="1.3" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="412.89" y="319.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (64 samples, 2.32%)</title><rect x="972.7" y="261" width="27.4" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="975.73" y="271.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)">L..</text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lpbi/IntegerPerturbationPoint:::getValue (1 samples, 0.04%)</title><rect x="27.1" y="389" width="0.4" height="15.0" fill="rgb(214,214,64)" rx="2" ry="2"/>
+<text text-anchor="" x="30.11" y="399.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>smp_apic_timer_interrupt (1 samples, 0.04%)</title><rect x="1075.4" y="165" width="0.4" height="15.0" fill="rgb(230,94,94)" rx="2" ry="2"/>
+<text text-anchor="" x="1078.38" y="175.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>__softirqentry_text_start (1 samples, 0.04%)</title><rect x="1093.8" y="197" width="0.4" height="15.0" fill="rgb(231,95,95)" rx="2" ry="2"/>
+<text text-anchor="" x="1096.77" y="207.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>counter_overflow Runtime1 stub (1 samples, 0.04%)</title><rect x="13.0" y="261" width="0.4" height="15.0" fill="rgb(229,93,93)" rx="2" ry="2"/>
+<text text-anchor="" x="15.99" y="271.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::sort (1 samples, 0.04%)</title><rect x="18.6" y="373" width="0.4" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="21.55" y="383.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>LinkResolver::resolve_invoke (1 samples, 0.04%)</title><rect x="360.3" y="133" width="0.4" height="15.0" fill="rgb(209,209,62)" rx="2" ry="2"/>
+<text text-anchor="" x="363.28" y="143.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (6 samples, 0.22%)</title><rect x="1091.2" y="229" width="2.6" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="1094.20" y="239.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::swap (20 samples, 0.72%)</title><rect x="1140.0" y="341" width="8.5" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="1142.96" y="351.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Runtime1::counter_overflow (1 samples, 0.04%)</title><rect x="17.3" y="197" width="0.4" height="15.0" fill="rgb(216,216,64)" rx="2" ry="2"/>
+<text text-anchor="" x="20.27" y="207.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::sort (71 samples, 2.57%)</title><rect x="330.3" y="229" width="30.4" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="333.34" y="239.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)">Lt..</text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::swap (17 samples, 0.62%)</title><rect x="1169.9" y="389" width="7.3" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="1172.90" y="399.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>prepare_exit_to_usermode (1 samples, 0.04%)</title><rect x="1187.9" y="389" width="0.4" height="15.0" fill="rgb(242,111,111)" rx="2" ry="2"/>
+<text text-anchor="" x="1190.86" y="399.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Compilation::build_hir (1 samples, 0.04%)</title><rect x="1189.6" y="469" width="0.4" height="15.0" fill="rgb(214,214,64)" rx="2" ry="2"/>
+<text text-anchor="" x="1192.57" y="479.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>update_blocked_averages (1 samples, 0.04%)</title><rect x="1075.4" y="85" width="0.4" height="15.0" fill="rgb(236,102,102)" rx="2" ry="2"/>
+<text text-anchor="" x="1078.38" y="95.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pBool (11 samples, 0.40%)</title><rect x="160.1" y="309" width="4.7" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="163.12" y="319.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>CompileBroker::invoke_compiler_on_method (1 samples, 0.04%)</title><rect x="1189.6" y="549" width="0.4" height="15.0" fill="rgb(214,214,64)" rx="2" ry="2"/>
+<text text-anchor="" x="1192.57" y="559.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::swap (24 samples, 0.87%)</title><rect x="1120.7" y="309" width="10.3" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="1123.71" y="319.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::sort (1 samples, 0.04%)</title><rect x="18.6" y="309" width="0.4" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="21.55" y="319.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>retint_user (1 samples, 0.04%)</title><rect x="310.7" y="229" width="0.4" height="15.0" fill="rgb(238,106,106)" rx="2" ry="2"/>
+<text text-anchor="" x="313.67" y="239.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>smp_apic_timer_interrupt (1 samples, 0.04%)</title><rect x="1093.8" y="229" width="0.4" height="15.0" fill="rgb(230,94,94)" rx="2" ry="2"/>
+<text text-anchor="" x="1096.77" y="239.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pBool (1 samples, 0.04%)</title><rect x="1076.7" y="181" width="0.4" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="1079.66" y="191.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (2 samples, 0.07%)</title><rect x="1085.6" y="197" width="0.9" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="1088.64" y="207.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (2 samples, 0.07%)</title><rect x="409.9" y="293" width="0.8" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="412.89" y="303.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>SharedRuntime::find_callee_method (1 samples, 0.04%)</title><rect x="360.3" y="165" width="0.4" height="15.0" fill="rgb(217,217,65)" rx="2" ry="2"/>
+<text text-anchor="" x="363.28" y="175.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::sort (10 samples, 0.36%)</title><rect x="13.4" y="261" width="4.3" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="16.42" y="271.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>exit_to_usermode_loop (1 samples, 0.04%)</title><rect x="149.4" y="277" width="0.5" height="15.0" fill="rgb(234,99,99)" rx="2" ry="2"/>
+<text text-anchor="" x="152.43" y="287.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>prepare_exit_to_usermode (1 samples, 0.04%)</title><rect x="310.7" y="213" width="0.4" height="15.0" fill="rgb(242,111,111)" rx="2" ry="2"/>
+<text text-anchor="" x="313.67" y="223.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (1 samples, 0.04%)</title><rect x="1082.2" y="149" width="0.4" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="1085.22" y="159.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::sort (1,817 samples, 65.86%)</title><rect x="411.2" y="421" width="777.1" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="414.17" y="431.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)">Ltarget/quicksort/QuickSortIntr:::sort</text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>ciMethod::find_monomorphic_target (1 samples, 0.04%)</title><rect x="1189.6" y="277" width="0.4" height="15.0" fill="rgb(201,201,59)" rx="2" ry="2"/>
+<text text-anchor="" x="1192.57" y="287.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::sort (1 samples, 0.04%)</title><rect x="18.6" y="357" width="0.4" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="21.55" y="367.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pBool (12 samples, 0.43%)</title><rect x="919.7" y="277" width="5.1" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="922.70" y="287.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>prepare_exit_to_usermode (1 samples, 0.04%)</title><rect x="972.3" y="229" width="0.4" height="15.0" fill="rgb(242,111,111)" rx="2" ry="2"/>
+<text text-anchor="" x="975.31" y="239.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::swap (9 samples, 0.33%)</title><rect x="1086.5" y="229" width="3.8" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="1089.50" y="239.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>GraphBuilder::try_inline (1 samples, 0.04%)</title><rect x="1189.6" y="357" width="0.4" height="15.0" fill="rgb(222,222,67)" rx="2" ry="2"/>
+<text text-anchor="" x="1192.57" y="367.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>GraphBuilder::GraphBuilder (1 samples, 0.04%)</title><rect x="1189.6" y="421" width="0.4" height="15.0" fill="rgb(222,222,67)" rx="2" ry="2"/>
+<text text-anchor="" x="1192.57" y="431.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::sort (12 samples, 0.43%)</title><rect x="13.4" y="277" width="5.2" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="16.42" y="287.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (36 samples, 1.30%)</title><rect x="295.7" y="245" width="15.4" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="298.70" y="255.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (88 samples, 3.19%)</title><rect x="649.4" y="341" width="37.6" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="652.40" y="351.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)">Lse..</text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::sort (781 samples, 28.31%)</title><rect x="66.9" y="373" width="334.0" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="69.88" y="383.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)">Ltarget/quicksort/QuickSortIntr:::sort</text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (19 samples, 0.69%)</title><rect x="322.2" y="229" width="8.1" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="325.21" y="239.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lpbi/IntegerPerturbationPoint:::getValue (1 samples, 0.04%)</title><rect x="320.1" y="229" width="0.4" height="15.0" fill="rgb(214,214,64)" rx="2" ry="2"/>
+<text text-anchor="" x="323.08" y="239.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (9 samples, 0.33%)</title><rect x="1098.0" y="245" width="3.9" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="1101.05" y="255.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (84 samples, 3.04%)</title><rect x="864.5" y="293" width="36.0" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="867.53" y="303.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)">Lse..</text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::sort (1,253 samples, 45.42%)</title><rect x="613.0" y="357" width="535.9" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="616.04" y="367.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)">Ltarget/quicksort/QuickSortIntr:::sort</text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>start_thread (1 samples, 0.04%)</title><rect x="1189.6" y="629" width="0.4" height="15.0" fill="rgb(237,104,104)" rx="2" ry="2"/>
+<text text-anchor="" x="1192.57" y="639.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (1 samples, 0.04%)</title><rect x="356.0" y="165" width="0.4" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="359.00" y="175.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>retint_user (1 samples, 0.04%)</title><rect x="16.8" y="133" width="0.5" height="15.0" fill="rgb(238,106,106)" rx="2" ry="2"/>
+<text text-anchor="" x="19.84" y="143.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>JavaMain (2,757 samples, 99.93%)</title><rect x="10.0" y="597" width="1179.1" height="15.0" fill="rgb(228,91,91)" rx="2" ry="2"/>
+<text text-anchor="" x="13.00" y="607.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)">JavaMain</text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (33 samples, 1.20%)</title><rect x="107.5" y="341" width="14.1" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="110.51" y="351.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>retint_user (1 samples, 0.04%)</title><rect x="972.3" y="245" width="0.4" height="15.0" fill="rgb(238,106,106)" rx="2" ry="2"/>
+<text text-anchor="" x="975.31" y="255.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::registerAccess (1 samples, 0.04%)</title><rect x="311.1" y="245" width="0.4" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="314.09" y="255.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::swap (25 samples, 0.91%)</title><rect x="1177.2" y="405" width="10.7" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="1180.17" y="415.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::swap (11 samples, 0.40%)</title><rect x="378.2" y="293" width="4.7" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="381.24" y="303.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>ClassHierarchyWalker::find_witness_anywhere (1 samples, 0.04%)</title><rect x="1189.6" y="245" width="0.4" height="15.0" fill="rgb(204,204,60)" rx="2" ry="2"/>
+<text text-anchor="" x="1192.57" y="255.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::sort (349 samples, 12.65%)</title><rect x="952.6" y="277" width="149.3" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="955.63" y="287.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)">Ltarget/quicksort/Q..</text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (4 samples, 0.14%)</title><rect x="350.4" y="181" width="1.8" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="353.44" y="191.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>smp_apic_timer_interrupt (1 samples, 0.04%)</title><rect x="829.0" y="277" width="0.5" height="15.0" fill="rgb(230,94,94)" rx="2" ry="2"/>
+<text text-anchor="" x="832.03" y="287.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::registerAccess (1 samples, 0.04%)</title><rect x="13.0" y="277" width="0.4" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="15.99" y="287.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>InstanceKlass::find_method_index (1 samples, 0.04%)</title><rect x="1189.6" y="197" width="0.4" height="15.0" fill="rgb(218,218,65)" rx="2" ry="2"/>
+<text text-anchor="" x="1192.57" y="207.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (5 samples, 0.18%)</title><rect x="369.7" y="245" width="2.1" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="372.69" y="255.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Interpreter (2,757 samples, 99.93%)</title><rect x="10.0" y="453" width="1179.1" height="15.0" fill="rgb(243,112,112)" rx="2" ry="2"/>
+<text text-anchor="" x="13.00" y="463.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)">Interpreter</text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>exit_to_usermode_loop (1 samples, 0.04%)</title><rect x="972.3" y="213" width="0.4" height="15.0" fill="rgb(234,99,99)" rx="2" ry="2"/>
+<text text-anchor="" x="975.31" y="223.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>finish_task_switch (1 samples, 0.04%)</title><rect x="1148.5" y="261" width="0.4" height="15.0" fill="rgb(242,111,111)" rx="2" ry="2"/>
+<text text-anchor="" x="1151.51" y="271.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::swap (1 samples, 0.04%)</title><rect x="1082.6" y="165" width="0.5" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="1085.65" y="175.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>retint_user (1 samples, 0.04%)</title><rect x="149.4" y="309" width="0.5" height="15.0" fill="rgb(238,106,106)" rx="2" ry="2"/>
+<text text-anchor="" x="152.43" y="319.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::sort (1 samples, 0.04%)</title><rect x="1082.2" y="165" width="0.4" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="1085.22" y="175.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lpbi/IntegerPerturbationPoint:::getValue (1 samples, 0.04%)</title><rect x="15.6" y="213" width="0.4" height="15.0" fill="rgb(214,214,64)" rx="2" ry="2"/>
+<text text-anchor="" x="18.56" y="223.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::sort (1 samples, 0.04%)</title><rect x="18.6" y="325" width="0.4" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="21.55" y="335.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>CodeHeap::find_start (1 samples, 0.04%)</title><rect x="13.0" y="229" width="0.4" height="15.0" fill="rgb(212,212,63)" rx="2" ry="2"/>
+<text text-anchor="" x="15.99" y="239.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::swap (9 samples, 0.33%)</title><rect x="397.1" y="357" width="3.8" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="400.06" y="367.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>smp_apic_timer_interrupt (1 samples, 0.04%)</title><rect x="355.6" y="133" width="0.4" height="15.0" fill="rgb(230,94,94)" rx="2" ry="2"/>
+<text text-anchor="" x="358.57" y="143.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>IRScope::IRScope (1 samples, 0.04%)</title><rect x="1189.6" y="437" width="0.4" height="15.0" fill="rgb(209,209,62)" rx="2" ry="2"/>
+<text text-anchor="" x="1192.57" y="447.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::sort (1 samples, 0.04%)</title><rect x="410.7" y="293" width="0.5" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="413.75" y="303.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::sort (41 samples, 1.49%)</title><rect x="339.7" y="213" width="17.6" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="342.75" y="223.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::sort (3 samples, 0.11%)</title><rect x="409.9" y="341" width="1.3" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="412.89" y="351.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::swap (1 samples, 0.04%)</title><rect x="19.0" y="373" width="0.4" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="21.98" y="383.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::sort (550 samples, 19.93%)</title><rect x="150.3" y="325" width="235.2" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="153.28" y="335.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)">Ltarget/quicksort/QuickSortIntr..</text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::registerAccess (1 samples, 0.04%)</title><rect x="178.9" y="309" width="0.5" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="181.94" y="319.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>irq_exit (1 samples, 0.04%)</title><rect x="1131.0" y="277" width="0.4" height="15.0" fill="rgb(236,103,103)" rx="2" ry="2"/>
+<text text-anchor="" x="1133.98" y="287.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::sort (6 samples, 0.22%)</title><rect x="15.1" y="229" width="2.6" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="18.13" y="239.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>retint_user (1 samples, 0.04%)</title><rect x="1187.9" y="405" width="0.4" height="15.0" fill="rgb(238,106,106)" rx="2" ry="2"/>
+<text text-anchor="" x="1190.86" y="415.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::sort (8 samples, 0.29%)</title><rect x="1079.7" y="181" width="3.4" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="1082.66" y="191.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::sort (20 samples, 0.72%)</title><rect x="10.0" y="357" width="8.6" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="13.00" y="367.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (7 samples, 0.25%)</title><rect x="352.6" y="165" width="3.0" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="355.58" y="175.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pBool (16 samples, 0.58%)</title><rect x="518.5" y="373" width="6.9" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="521.52" y="383.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (4 samples, 0.14%)</title><rect x="1083.9" y="181" width="1.7" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="1086.93" y="191.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>GraphBuilder::iterate_bytecodes_for_block (1 samples, 0.04%)</title><rect x="1189.6" y="389" width="0.4" height="15.0" fill="rgb(222,222,67)" rx="2" ry="2"/>
+<text text-anchor="" x="1192.57" y="399.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::registerAccess (1 samples, 0.04%)</title><rect x="14.7" y="229" width="0.4" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="17.70" y="239.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::sort (19 samples, 0.69%)</title><rect x="1075.8" y="197" width="8.1" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="1078.81" y="207.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>GraphBuilder::iterate_all_blocks (1 samples, 0.04%)</title><rect x="1189.6" y="405" width="0.4" height="15.0" fill="rgb(222,222,67)" rx="2" ry="2"/>
+<text text-anchor="" x="1192.57" y="415.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>irq_exit (1 samples, 0.04%)</title><rect x="1093.8" y="213" width="0.4" height="15.0" fill="rgb(236,103,103)" rx="2" ry="2"/>
+<text text-anchor="" x="1096.77" y="223.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>__lock_text_start (1 samples, 0.04%)</title><rect x="1075.4" y="69" width="0.4" height="15.0" fill="rgb(236,103,103)" rx="2" ry="2"/>
+<text text-anchor="" x="1078.38" y="79.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>start_thread (2,757 samples, 99.93%)</title><rect x="10.0" y="629" width="1179.1" height="15.0" fill="rgb(237,104,104)" rx="2" ry="2"/>
+<text text-anchor="" x="13.00" y="639.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)">start_thread</text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lpbi/BooleanPerturbationPoint:::getValue (1 samples, 0.04%)</title><rect x="13.8" y="245" width="0.5" height="15.0" fill="rgb(214,214,64)" rx="2" ry="2"/>
+<text text-anchor="" x="16.85" y="255.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (9 samples, 0.33%)</title><rect x="388.1" y="309" width="3.8" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="391.08" y="319.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pBool (2 samples, 0.07%)</title><rect x="1070.7" y="197" width="0.8" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="1073.67" y="207.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (14 samples, 0.51%)</title><rect x="1114.3" y="277" width="6.0" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="1117.30" y="287.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::swap (7 samples, 0.25%)</title><rect x="406.0" y="389" width="3.0" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="409.04" y="399.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pBool (2 samples, 0.07%)</title><rect x="294.8" y="245" width="0.9" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="297.84" y="255.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>LinkResolver::resolve_method (1 samples, 0.04%)</title><rect x="1189.1" y="485" width="0.5" height="15.0" fill="rgb(209,209,62)" rx="2" ry="2"/>
+<text text-anchor="" x="1192.14" y="495.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>SharedRuntime::resolve_helper (1 samples, 0.04%)</title><rect x="1189.1" y="565" width="0.5" height="15.0" fill="rgb(217,217,65)" rx="2" ry="2"/>
+<text text-anchor="" x="1192.14" y="575.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (1 samples, 0.04%)</title><rect x="18.6" y="261" width="0.4" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="21.55" y="271.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (9 samples, 0.33%)</title><rect x="374.4" y="261" width="3.8" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="377.39" y="271.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (84 samples, 3.04%)</title><rect x="718.3" y="325" width="35.9" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="721.26" y="335.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)">Lse..</text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::swap (18 samples, 0.65%)</title><rect x="1094.2" y="261" width="7.7" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="1097.20" y="271.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::registerAccess (1 samples, 0.04%)</title><rect x="10.4" y="325" width="0.5" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="13.43" y="335.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::sort (707 samples, 25.63%)</title><rect x="94.7" y="357" width="302.4" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="97.68" y="367.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)">Ltarget/quicksort/QuickSortIntr:::sort</text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::sort (9 samples, 0.33%)</title><rect x="352.2" y="181" width="3.8" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="355.15" y="191.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>irq_exit (1 samples, 0.04%)</title><rect x="829.0" y="261" width="0.5" height="15.0" fill="rgb(236,103,103)" rx="2" ry="2"/>
+<text text-anchor="" x="832.03" y="271.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>counter_overflow Runtime1 stub (1 samples, 0.04%)</title><rect x="17.3" y="213" width="0.4" height="15.0" fill="rgb(229,93,93)" rx="2" ry="2"/>
+<text text-anchor="" x="20.27" y="223.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pBool (4 samples, 0.14%)</title><rect x="194.8" y="293" width="1.7" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="197.76" y="303.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::swap (7 samples, 0.25%)</title><rect x="357.3" y="213" width="3.0" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="360.29" y="223.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (34 samples, 1.23%)</title><rect x="31.0" y="389" width="14.5" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="33.96" y="399.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>GraphBuilder::iterate_all_blocks (1 samples, 0.04%)</title><rect x="1189.6" y="325" width="0.4" height="15.0" fill="rgb(222,222,67)" rx="2" ry="2"/>
+<text text-anchor="" x="1192.57" y="335.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lpbi/IntegerPerturbationPoint:::getValue (1 samples, 0.04%)</title><rect x="75.4" y="357" width="0.5" height="15.0" fill="rgb(214,214,64)" rx="2" ry="2"/>
+<text text-anchor="" x="78.44" y="367.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (26 samples, 0.94%)</title><rect x="1038.2" y="229" width="11.1" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="1041.17" y="239.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::sort (1,683 samples, 61.00%)</title><rect x="457.4" y="405" width="719.8" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="460.36" y="415.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)">Ltarget/quicksort/QuickSortIntr:::sort</text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pBool (15 samples, 0.54%)</title><rect x="711.8" y="325" width="6.5" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="714.84" y="335.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>schedule (1 samples, 0.04%)</title><rect x="1148.5" y="293" width="0.4" height="15.0" fill="rgb(239,107,107)" rx="2" ry="2"/>
+<text text-anchor="" x="1151.51" y="303.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (49 samples, 1.78%)</title><rect x="196.5" y="293" width="20.9" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="199.47" y="303.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::sort (20 samples, 0.72%)</title><rect x="10.0" y="373" width="8.6" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="13.00" y="383.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>SharedRuntime::resolve_sub_helper (1 samples, 0.04%)</title><rect x="1189.1" y="549" width="0.5" height="15.0" fill="rgb(217,217,65)" rx="2" ry="2"/>
+<text text-anchor="" x="1192.14" y="559.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::sort (198 samples, 7.18%)</title><rect x="284.6" y="261" width="84.7" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="287.58" y="271.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)">Ltarget/q..</text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lpbi/IntegerPerturbationPoint:::getValue (1 samples, 0.04%)</title><rect x="294.4" y="245" width="0.4" height="15.0" fill="rgb(214,214,64)" rx="2" ry="2"/>
+<text text-anchor="" x="297.41" y="255.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>counter_overflow Runtime1 stub (1 samples, 0.04%)</title><rect x="16.8" y="165" width="0.5" height="15.0" fill="rgb(229,93,93)" rx="2" ry="2"/>
+<text text-anchor="" x="19.84" y="175.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pBool (9 samples, 0.33%)</title><rect x="261.5" y="261" width="3.8" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="264.48" y="271.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>CompileBroker::compiler_thread_loop (1 samples, 0.04%)</title><rect x="1189.6" y="565" width="0.4" height="15.0" fill="rgb(214,214,64)" rx="2" ry="2"/>
+<text text-anchor="" x="1192.57" y="575.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::sort (1 samples, 0.04%)</title><rect x="18.6" y="341" width="0.4" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="21.55" y="351.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::swap (2 samples, 0.07%)</title><rect x="17.7" y="261" width="0.9" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="20.70" y="271.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::swap (29 samples, 1.05%)</title><rect x="1157.5" y="373" width="12.4" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="1160.50" y="383.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>GraphBuilder::invoke (1 samples, 0.04%)</title><rect x="1189.6" y="293" width="0.4" height="15.0" fill="rgb(222,222,67)" rx="2" ry="2"/>
+<text text-anchor="" x="1192.57" y="303.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Interpreter (2,757 samples, 99.93%)</title><rect x="10.0" y="485" width="1179.1" height="15.0" fill="rgb(243,112,112)" rx="2" ry="2"/>
+<text text-anchor="" x="13.00" y="495.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)">Interpreter</text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (10 samples, 0.36%)</title><rect x="1172.9" y="373" width="4.3" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="1175.89" y="383.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pBool (8 samples, 0.29%)</title><rect x="226.8" y="277" width="3.5" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="229.84" y="287.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>retint_user (1 samples, 0.04%)</title><rect x="1120.3" y="293" width="0.4" height="15.0" fill="rgb(238,106,106)" rx="2" ry="2"/>
+<text text-anchor="" x="1123.29" y="303.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>run_rebalance_domains (1 samples, 0.04%)</title><rect x="1075.4" y="117" width="0.4" height="15.0" fill="rgb(237,104,104)" rx="2" ry="2"/>
+<text text-anchor="" x="1078.38" y="127.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>SharedRuntime::find_callee_info_helper (1 samples, 0.04%)</title><rect x="1189.1" y="533" width="0.5" height="15.0" fill="rgb(217,217,65)" rx="2" ry="2"/>
+<text text-anchor="" x="1192.14" y="543.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pBool (2 samples, 0.07%)</title><rect x="1057.8" y="213" width="0.9" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="1060.84" y="223.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lpbi/IntegerPerturbationPoint:::getValue (2 samples, 0.07%)</title><rect x="104.5" y="341" width="0.9" height="15.0" fill="rgb(214,214,64)" rx="2" ry="2"/>
+<text text-anchor="" x="107.52" y="351.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::sort (152 samples, 5.51%)</title><rect x="1025.3" y="245" width="65.0" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="1028.34" y="255.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)">Ltarget..</text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::sort (2 samples, 0.07%)</title><rect x="18.6" y="389" width="0.8" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="21.55" y="399.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pBool (9 samples, 0.33%)</title><rect x="1011.2" y="245" width="3.9" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="1014.23" y="255.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (65 samples, 2.36%)</title><rect x="525.4" y="373" width="27.8" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="528.37" y="383.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)">L..</text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>exit_to_usermode_loop (1 samples, 0.04%)</title><rect x="16.8" y="101" width="0.5" height="15.0" fill="rgb(234,99,99)" rx="2" ry="2"/>
+<text text-anchor="" x="19.84" y="111.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>run_rebalance_domains (1 samples, 0.04%)</title><rect x="1157.1" y="277" width="0.4" height="15.0" fill="rgb(237,104,104)" rx="2" ry="2"/>
+<text text-anchor="" x="1160.07" y="287.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>exit_to_usermode_loop (1 samples, 0.04%)</title><rect x="1120.3" y="261" width="0.4" height="15.0" fill="rgb(234,99,99)" rx="2" ry="2"/>
+<text text-anchor="" x="1123.29" y="271.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (6 samples, 0.22%)</title><rect x="382.9" y="293" width="2.6" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="385.95" y="303.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (4 samples, 0.14%)</title><rect x="407.3" y="373" width="1.7" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="410.33" y="383.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::sort (911 samples, 33.02%)</title><rect x="19.4" y="405" width="389.6" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="22.41" y="415.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)">Ltarget/quicksort/QuickSortIntr:::sort</text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/interpolator/SinglePerturbationExplorer:::executePerturbation (911 samples, 33.02%)</title><rect x="19.4" y="421" width="389.6" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="22.41" y="431.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)">Lservices/interpolator/SinglePerturbationExplorer:::e..</text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (8 samples, 0.29%)</title><rect x="365.8" y="229" width="3.5" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="368.84" y="239.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>run_rebalance_domains (1 samples, 0.04%)</title><rect x="355.6" y="85" width="0.4" height="15.0" fill="rgb(237,104,104)" rx="2" ry="2"/>
+<text text-anchor="" x="358.57" y="95.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (20 samples, 0.72%)</title><rect x="1122.4" y="293" width="8.6" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="1125.42" y="303.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::sort (87 samples, 3.15%)</title><rect x="1049.3" y="229" width="37.2" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="1052.29" y="239.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)">Lta..</text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>ClassHierarchyWalker::is_witness (1 samples, 0.04%)</title><rect x="1189.6" y="229" width="0.4" height="15.0" fill="rgb(204,204,60)" rx="2" ry="2"/>
+<text text-anchor="" x="1192.57" y="239.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>prepare_exit_to_usermode (1 samples, 0.04%)</title><rect x="1148.5" y="325" width="0.4" height="15.0" fill="rgb(242,111,111)" rx="2" ry="2"/>
+<text text-anchor="" x="1151.51" y="335.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pBool (14 samples, 0.51%)</title><rect x="576.3" y="357" width="6.0" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="579.26" y="367.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::registerAccess (1 samples, 0.04%)</title><rect x="371.8" y="245" width="0.5" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="374.83" y="255.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::registerAccess (1 samples, 0.04%)</title><rect x="94.3" y="357" width="0.4" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="97.26" y="367.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>JavaCalls::call_helper (2,757 samples, 99.93%)</title><rect x="10.0" y="549" width="1179.1" height="15.0" fill="rgb(203,203,60)" rx="2" ry="2"/>
+<text text-anchor="" x="13.00" y="559.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)">JavaCalls::call_helper</text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::sort (3 samples, 0.11%)</title><rect x="409.9" y="373" width="1.3" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="412.89" y="383.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>retint_user (1 samples, 0.04%)</title><rect x="1148.5" y="341" width="0.4" height="15.0" fill="rgb(238,106,106)" rx="2" ry="2"/>
+<text text-anchor="" x="1151.51" y="351.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>__softirqentry_text_start (1 samples, 0.04%)</title><rect x="1131.0" y="261" width="0.4" height="15.0" fill="rgb(231,95,95)" rx="2" ry="2"/>
+<text text-anchor="" x="1133.98" y="271.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Interpreter (2,757 samples, 99.93%)</title><rect x="10.0" y="517" width="1179.1" height="15.0" fill="rgb(243,112,112)" rx="2" ry="2"/>
+<text text-anchor="" x="13.00" y="527.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)">Interpreter</text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>[perf-12063.map] (1 samples, 0.04%)</title><rect x="1189.1" y="597" width="0.5" height="15.0" fill="rgb(246,118,118)" rx="2" ry="2"/>
+<text text-anchor="" x="1192.14" y="607.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>__softirqentry_text_start (1 samples, 0.04%)</title><rect x="1075.4" y="133" width="0.4" height="15.0" fill="rgb(231,95,95)" rx="2" ry="2"/>
+<text text-anchor="" x="1078.38" y="143.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (7 samples, 0.25%)</title><rect x="1154.1" y="341" width="3.0" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="1157.07" y="351.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::sort (1 samples, 0.04%)</title><rect x="355.6" y="165" width="0.4" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="358.57" y="175.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>LinkResolver::resolve_method_statically (1 samples, 0.04%)</title><rect x="1189.1" y="501" width="0.5" height="15.0" fill="rgb(209,209,62)" rx="2" ry="2"/>
+<text text-anchor="" x="1192.14" y="511.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>__lock_text_start (1 samples, 0.04%)</title><rect x="1157.1" y="229" width="0.4" height="15.0" fill="rgb(236,103,103)" rx="2" ry="2"/>
+<text text-anchor="" x="1160.07" y="239.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>GraphBuilder::invoke (1 samples, 0.04%)</title><rect x="1189.6" y="373" width="0.4" height="15.0" fill="rgb(222,222,67)" rx="2" ry="2"/>
+<text text-anchor="" x="1192.57" y="383.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (10 samples, 0.36%)</title><rect x="335.5" y="213" width="4.2" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="338.47" y="223.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>jni_CallStaticVoidMethod (2,757 samples, 99.93%)</title><rect x="10.0" y="581" width="1179.1" height="15.0" fill="rgb(236,103,103)" rx="2" ry="2"/>
+<text text-anchor="" x="13.00" y="591.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)">jni_CallStaticVoidMethod</text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pBool (6 samples, 0.22%)</title><rect x="52.8" y="373" width="2.5" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="55.77" y="383.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Interpreter (935 samples, 33.89%)</title><rect x="10.0" y="437" width="399.9" height="15.0" fill="rgb(243,112,112)" rx="2" ry="2"/>
+<text text-anchor="" x="13.00" y="447.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)">Interpreter</text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>ret_from_intr (1 samples, 0.04%)</title><rect x="1131.0" y="309" width="0.4" height="15.0" fill="rgb(238,106,106)" rx="2" ry="2"/>
+<text text-anchor="" x="1133.98" y="319.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::sort (3 samples, 0.11%)</title><rect x="409.9" y="325" width="1.3" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="412.89" y="335.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::sort (632 samples, 22.91%)</title><rect x="121.6" y="341" width="270.3" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="124.63" y="351.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)">Ltarget/quicksort/QuickSortIntr:::sort</text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (6 samples, 0.22%)</title><rect x="380.4" y="277" width="2.5" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="383.38" y="287.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>do_IRQ (1 samples, 0.04%)</title><rect x="1131.0" y="293" width="0.4" height="15.0" fill="rgb(245,115,115)" rx="2" ry="2"/>
+<text text-anchor="" x="1133.98" y="303.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (1 samples, 0.04%)</title><rect x="19.0" y="357" width="0.4" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="21.98" y="367.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pBool (2 samples, 0.07%)</title><rect x="343.6" y="197" width="0.9" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="346.60" y="207.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pBool (8 samples, 0.29%)</title><rect x="133.6" y="325" width="3.4" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="136.60" y="335.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::sort (376 samples, 13.63%)</title><rect x="217.4" y="293" width="160.8" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="220.43" y="303.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)">Ltarget/quicksort/Qu..</text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pBool (24 samples, 0.87%)</title><rect x="639.1" y="341" width="10.3" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="642.13" y="351.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pBool (8 samples, 0.29%)</title><rect x="27.5" y="389" width="3.5" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="30.54" y="399.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lpbi/IntegerPerturbationPoint:::getValue (1 samples, 0.04%)</title><rect x="12.6" y="277" width="0.4" height="15.0" fill="rgb(214,214,64)" rx="2" ry="2"/>
+<text text-anchor="" x="15.57" y="287.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pBool (6 samples, 0.22%)</title><rect x="1035.6" y="229" width="2.6" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="1038.60" y="239.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortManager:::perturb (3 samples, 0.11%)</title><rect x="409.9" y="405" width="1.3" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="412.89" y="415.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>__irqentry_text_start (1 samples, 0.04%)</title><rect x="355.6" y="149" width="0.4" height="15.0" fill="rgb(230,93,93)" rx="2" ry="2"/>
+<text text-anchor="" x="358.57" y="159.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>jni_invoke_static (2,757 samples, 99.93%)</title><rect x="10.0" y="565" width="1179.1" height="15.0" fill="rgb(236,103,103)" rx="2" ry="2"/>
+<text text-anchor="" x="13.00" y="575.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)">jni_invoke_static</text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>finish_task_switch (1 samples, 0.04%)</title><rect x="310.7" y="149" width="0.4" height="15.0" fill="rgb(242,111,111)" rx="2" ry="2"/>
+<text text-anchor="" x="313.67" y="159.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::sort (17 samples, 0.62%)</title><rect x="11.3" y="309" width="7.3" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="14.28" y="319.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>__softirqentry_text_start (1 samples, 0.04%)</title><rect x="355.6" y="101" width="0.4" height="15.0" fill="rgb(231,95,95)" rx="2" ry="2"/>
+<text text-anchor="" x="358.57" y="111.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>SystemDictionary::check_signature_loaders (1 samples, 0.04%)</title><rect x="1189.1" y="469" width="0.5" height="15.0" fill="rgb(218,218,65)" rx="2" ry="2"/>
+<text text-anchor="" x="1192.14" y="479.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::registerAccess (1 samples, 0.04%)</title><rect x="10.9" y="309" width="0.4" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="13.86" y="319.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (24 samples, 0.87%)</title><rect x="1015.1" y="245" width="10.2" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="1018.07" y="255.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>__schedule (1 samples, 0.04%)</title><rect x="1148.5" y="277" width="0.4" height="15.0" fill="rgb(231,95,95)" rx="2" ry="2"/>
+<text text-anchor="" x="1151.51" y="287.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pBool (4 samples, 0.14%)</title><rect x="320.5" y="229" width="1.7" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="323.50" y="239.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>prepare_exit_to_usermode (1 samples, 0.04%)</title><rect x="149.4" y="293" width="0.5" height="15.0" fill="rgb(242,111,111)" rx="2" ry="2"/>
+<text text-anchor="" x="152.43" y="303.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Runtime1::counter_overflow (1 samples, 0.04%)</title><rect x="371.8" y="213" width="0.5" height="15.0" fill="rgb(216,216,64)" rx="2" ry="2"/>
+<text text-anchor="" x="374.83" y="223.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>irq_exit (1 samples, 0.04%)</title><rect x="355.6" y="117" width="0.4" height="15.0" fill="rgb(236,103,103)" rx="2" ry="2"/>
+<text text-anchor="" x="358.57" y="127.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pBool (5 samples, 0.18%)</title><rect x="105.4" y="341" width="2.1" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="108.38" y="351.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (10 samples, 0.36%)</title><rect x="1071.5" y="197" width="4.3" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="1074.53" y="207.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>java-12093 (2,757 samples, 99.93%)</title><rect x="10.0" y="645" width="1179.1" height="15.0" fill="rgb(224,86,86)" rx="2" ry="2"/>
+<text text-anchor="" x="13.00" y="655.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)">java-12093</text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::swap (4 samples, 0.14%)</title><rect x="1083.9" y="197" width="1.7" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="1086.93" y="207.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>SharedRuntime::reresolve_call_site (1 samples, 0.04%)</title><rect x="360.3" y="181" width="0.4" height="15.0" fill="rgb(217,217,65)" rx="2" ry="2"/>
+<text text-anchor="" x="363.28" y="191.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>AdvancedThresholdPolicy::method_back_branch_event (1 samples, 0.04%)</title><rect x="17.3" y="165" width="0.4" height="15.0" fill="rgb(211,211,63)" rx="2" ry="2"/>
+<text text-anchor="" x="20.27" y="175.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (60 samples, 2.17%)</title><rect x="476.2" y="389" width="25.6" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="479.18" y="399.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)">L..</text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::sort (20 samples, 0.72%)</title><rect x="10.0" y="341" width="8.6" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="13.00" y="351.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Interpreter (20 samples, 0.72%)</title><rect x="10.0" y="405" width="8.6" height="15.0" fill="rgb(243,112,112)" rx="2" ry="2"/>
+<text text-anchor="" x="13.00" y="415.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>JavaThread::thread_main_inner (1 samples, 0.04%)</title><rect x="1189.6" y="581" width="0.4" height="15.0" fill="rgb(203,203,60)" rx="2" ry="2"/>
+<text text-anchor="" x="1192.57" y="591.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::sort (3 samples, 0.11%)</title><rect x="409.9" y="389" width="1.3" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="412.89" y="399.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lpbi/IntegerPerturbationPoint:::getValue (1 samples, 0.04%)</title><rect x="10.0" y="325" width="0.4" height="15.0" fill="rgb(214,214,64)" rx="2" ry="2"/>
+<text text-anchor="" x="13.00" y="335.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (14 samples, 0.51%)</title><rect x="1103.6" y="261" width="6.0" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="1106.61" y="271.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::swap (12 samples, 0.43%)</title><rect x="391.9" y="341" width="5.2" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="394.93" y="351.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>__lock_text_start (1 samples, 0.04%)</title><rect x="355.6" y="37" width="0.4" height="15.0" fill="rgb(236,103,103)" rx="2" ry="2"/>
+<text text-anchor="" x="358.57" y="47.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Runtime1::counter_overflow (1 samples, 0.04%)</title><rect x="16.8" y="149" width="0.5" height="15.0" fill="rgb(216,216,64)" rx="2" ry="2"/>
+<text text-anchor="" x="19.84" y="159.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>JavaThread::run (1 samples, 0.04%)</title><rect x="1189.6" y="597" width="0.4" height="15.0" fill="rgb(203,203,60)" rx="2" ry="2"/>
+<text text-anchor="" x="1192.57" y="607.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::swap (18 samples, 0.65%)</title><rect x="1101.9" y="277" width="7.7" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="1104.90" y="287.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>__softirqentry_text_start (1 samples, 0.04%)</title><rect x="829.0" y="245" width="0.5" height="15.0" fill="rgb(231,95,95)" rx="2" ry="2"/>
+<text text-anchor="" x="832.03" y="255.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::registerAccess (1 samples, 0.04%)</title><rect x="66.5" y="373" width="0.4" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="69.46" y="383.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>call_stub (2,757 samples, 99.93%)</title><rect x="10.0" y="533" width="1179.1" height="15.0" fill="rgb(226,89,89)" rx="2" ry="2"/>
+<text text-anchor="" x="13.00" y="543.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)">call_stub</text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Interpreter (2,757 samples, 99.93%)</title><rect x="10.0" y="501" width="1179.1" height="15.0" fill="rgb(243,112,112)" rx="2" ry="2"/>
+<text text-anchor="" x="13.00" y="511.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)">Interpreter</text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>rebalance_domains (1 samples, 0.04%)</title><rect x="355.6" y="69" width="0.4" height="15.0" fill="rgb(243,113,113)" rx="2" ry="2"/>
+<text text-anchor="" x="358.57" y="79.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (1 samples, 0.04%)</title><rect x="1081.8" y="165" width="0.4" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="1084.79" y="175.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::swap (1 samples, 0.04%)</title><rect x="356.0" y="181" width="0.4" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="359.00" y="191.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>LinkResolver::resolve_invokeinterface (1 samples, 0.04%)</title><rect x="360.3" y="117" width="0.4" height="15.0" fill="rgb(209,209,62)" rx="2" ry="2"/>
+<text text-anchor="" x="363.28" y="127.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>LinkResolver::resolve_interface_method (1 samples, 0.04%)</title><rect x="360.3" y="85" width="0.4" height="15.0" fill="rgb(209,209,62)" rx="2" ry="2"/>
+<text text-anchor="" x="363.28" y="95.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (45 samples, 1.63%)</title><rect x="265.3" y="261" width="19.3" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="268.33" y="271.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pBool (9 samples, 0.33%)</title><rect x="968.9" y="261" width="3.8" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="971.88" y="271.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>prepare_exit_to_usermode (1 samples, 0.04%)</title><rect x="16.8" y="117" width="0.5" height="15.0" fill="rgb(242,111,111)" rx="2" ry="2"/>
+<text text-anchor="" x="19.84" y="127.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::swap (8 samples, 0.29%)</title><rect x="1090.3" y="245" width="3.5" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="1093.35" y="255.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pBool (15 samples, 0.54%)</title><rect x="858.1" y="293" width="6.4" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="861.11" y="303.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::sort (1 samples, 0.04%)</title><rect x="18.6" y="293" width="0.4" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="21.55" y="303.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::sort (1,059 samples, 38.38%)</title><rect x="687.0" y="341" width="453.0" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="690.04" y="351.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)">Ltarget/quicksort/QuickSortIntr:::sort</text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>__irqentry_text_start (1 samples, 0.04%)</title><rect x="1093.8" y="245" width="0.4" height="15.0" fill="rgb(230,93,93)" rx="2" ry="2"/>
+<text text-anchor="" x="1096.77" y="255.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortManager:::perturb (2 samples, 0.07%)</title><rect x="18.6" y="405" width="0.8" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="21.55" y="415.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (1 samples, 0.04%)</title><rect x="410.7" y="261" width="0.5" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="413.75" y="271.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::sort (1 samples, 0.04%)</title><rect x="410.7" y="277" width="0.5" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="413.75" y="287.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lpbi/BooleanPerturbationPoint:::getValue (2 samples, 0.07%)</title><rect x="74.6" y="357" width="0.8" height="15.0" fill="rgb(214,214,64)" rx="2" ry="2"/>
+<text text-anchor="" x="77.58" y="367.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::swap (25 samples, 0.91%)</title><rect x="1109.6" y="293" width="10.7" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="1112.59" y="303.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::sort (3 samples, 0.11%)</title><rect x="409.9" y="357" width="1.3" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="412.89" y="367.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Interpreter (20 samples, 0.72%)</title><rect x="10.0" y="389" width="8.6" height="15.0" fill="rgb(243,112,112)" rx="2" ry="2"/>
+<text text-anchor="" x="13.00" y="399.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lpbi/BooleanPerturbationPoint:::getValue (1 samples, 0.04%)</title><rect x="15.1" y="213" width="0.5" height="15.0" fill="rgb(214,214,64)" rx="2" ry="2"/>
+<text text-anchor="" x="18.13" y="223.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>LinkResolver::resolve_interface_call (1 samples, 0.04%)</title><rect x="360.3" y="101" width="0.4" height="15.0" fill="rgb(209,209,62)" rx="2" ry="2"/>
+<text text-anchor="" x="363.28" y="111.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::swap (20 samples, 0.72%)</title><rect x="1148.9" y="357" width="8.6" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="1151.94" y="367.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (5 samples, 0.18%)</title><rect x="358.1" y="197" width="2.2" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="361.14" y="207.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>exit_to_usermode_loop (1 samples, 0.04%)</title><rect x="310.7" y="197" width="0.4" height="15.0" fill="rgb(234,99,99)" rx="2" ry="2"/>
+<text text-anchor="" x="313.67" y="207.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::sort (1,413 samples, 51.21%)</title><rect x="553.2" y="373" width="604.3" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="556.17" y="383.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)">Ltarget/quicksort/QuickSortIntr:::sort</text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::sort (882 samples, 31.97%)</title><rect x="754.2" y="325" width="377.2" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="757.18" y="335.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)">Ltarget/quicksort/QuickSortIntr:::sort</text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::swap (12 samples, 0.43%)</title><rect x="400.9" y="373" width="5.1" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="403.91" y="383.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (8 samples, 0.29%)</title><rect x="393.6" y="325" width="3.5" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="396.64" y="335.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>wrong_method_stub (1 samples, 0.04%)</title><rect x="360.3" y="213" width="0.4" height="15.0" fill="rgb(230,94,94)" rx="2" ry="2"/>
+<text text-anchor="" x="363.28" y="223.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::swap (1 samples, 0.04%)</title><rect x="18.6" y="277" width="0.4" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="21.55" y="287.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lpbi/PerturbationPoint:::compareTo (1 samples, 0.04%)</title><rect x="410.3" y="277" width="0.4" height="15.0" fill="rgb(214,214,64)" rx="2" ry="2"/>
+<text text-anchor="" x="413.32" y="287.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>update_blocked_averages (1 samples, 0.04%)</title><rect x="1157.1" y="245" width="0.4" height="15.0" fill="rgb(236,102,102)" rx="2" ry="2"/>
+<text text-anchor="" x="1160.07" y="255.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>all (2,759 samples, 100%)</title><rect x="10.0" y="661" width="1180.0" height="15.0" fill="rgb(255,130,130)" rx="2" ry="2"/>
+<text text-anchor="" x="13.00" y="671.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::registerAccess (1 samples, 0.04%)</title><rect x="178.5" y="293" width="0.4" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="181.51" y="303.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (30 samples, 1.09%)</title><rect x="137.0" y="325" width="12.9" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="140.02" y="335.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>__irqentry_text_start (1 samples, 0.04%)</title><rect x="1075.4" y="181" width="0.4" height="15.0" fill="rgb(230,93,93)" rx="2" ry="2"/>
+<text text-anchor="" x="1078.38" y="191.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Dependencies::find_unique_concrete_method (1 samples, 0.04%)</title><rect x="1189.6" y="261" width="0.4" height="15.0" fill="rgb(209,209,62)" rx="2" ry="2"/>
+<text text-anchor="" x="1192.57" y="271.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::swap (7 samples, 0.25%)</title><rect x="369.3" y="261" width="3.0" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="372.26" y="271.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Bytecode_invoke::static_target (1 samples, 0.04%)</title><rect x="1189.1" y="517" width="0.5" height="15.0" fill="rgb(212,212,63)" rx="2" ry="2"/>
+<text text-anchor="" x="1192.14" y="527.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::sort (19 samples, 0.69%)</title><rect x="348.3" y="197" width="8.1" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="351.30" y="207.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>rebalance_domains (1 samples, 0.04%)</title><rect x="1075.4" y="101" width="0.4" height="15.0" fill="rgb(243,113,113)" rx="2" ry="2"/>
+<text text-anchor="" x="1078.38" y="111.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>exit_to_usermode_loop (1 samples, 0.04%)</title><rect x="1187.9" y="373" width="0.4" height="15.0" fill="rgb(234,99,99)" rx="2" ry="2"/>
+<text text-anchor="" x="1190.86" y="383.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>prepare_exit_to_usermode (1 samples, 0.04%)</title><rect x="1120.3" y="277" width="0.4" height="15.0" fill="rgb(242,111,111)" rx="2" ry="2"/>
+<text text-anchor="" x="1123.29" y="287.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::sort (220 samples, 7.97%)</title><rect x="1000.1" y="261" width="94.1" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="1003.11" y="271.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)">Ltarget/qui..</text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>update_blocked_averages (1 samples, 0.04%)</title><rect x="355.6" y="53" width="0.4" height="15.0" fill="rgb(236,102,102)" rx="2" ry="2"/>
+<text text-anchor="" x="358.57" y="63.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>SimpleThresholdPolicy::event (1 samples, 0.04%)</title><rect x="17.3" y="181" width="0.4" height="15.0" fill="rgb(216,216,64)" rx="2" ry="2"/>
+<text text-anchor="" x="20.27" y="191.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::sort (1,562 samples, 56.61%)</title><rect x="501.8" y="389" width="668.1" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="504.84" y="399.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)">Ltarget/quicksort/QuickSortIntr:::sort</text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::sort (283 samples, 10.26%)</title><rect x="251.2" y="277" width="121.1" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="254.22" y="287.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)">Ltarget/quickso..</text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (72 samples, 2.61%)</title><rect x="582.3" y="357" width="30.7" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="585.25" y="367.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)">Ls..</text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>counter_overflow Runtime1 stub (1 samples, 0.04%)</title><rect x="371.8" y="229" width="0.5" height="15.0" fill="rgb(229,93,93)" rx="2" ry="2"/>
+<text text-anchor="" x="374.83" y="239.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>SharedRuntime::find_callee_info_helper (1 samples, 0.04%)</title><rect x="360.3" y="149" width="0.4" height="15.0" fill="rgb(217,217,65)" rx="2" ry="2"/>
+<text text-anchor="" x="363.28" y="159.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Compilation::compile_java_method (1 samples, 0.04%)</title><rect x="1189.6" y="485" width="0.4" height="15.0" fill="rgb(214,214,64)" rx="2" ry="2"/>
+<text text-anchor="" x="1192.57" y="495.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Compilation::Compilation (1 samples, 0.04%)</title><rect x="1189.6" y="517" width="0.4" height="15.0" fill="rgb(214,214,64)" rx="2" ry="2"/>
+<text text-anchor="" x="1192.57" y="527.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lpbi/IntegerPerturbationPoint:::getValue (1 samples, 0.04%)</title><rect x="356.9" y="181" width="0.4" height="15.0" fill="rgb(214,214,64)" rx="2" ry="2"/>
+<text text-anchor="" x="359.86" y="191.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (33 samples, 1.20%)</title><rect x="164.8" y="309" width="14.1" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="167.82" y="319.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (39 samples, 1.41%)</title><rect x="77.6" y="357" width="16.7" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="80.58" y="367.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::swap (20 samples, 0.72%)</title><rect x="1131.4" y="325" width="8.6" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="1134.41" y="335.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortManager:::getExpected (2 samples, 0.07%)</title><rect x="409.0" y="421" width="0.9" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="412.04" y="431.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>__irqentry_text_start (1 samples, 0.04%)</title><rect x="1157.1" y="341" width="0.4" height="15.0" fill="rgb(230,93,93)" rx="2" ry="2"/>
+<text text-anchor="" x="1160.07" y="351.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::registerAccess (1 samples, 0.04%)</title><rect x="16.8" y="181" width="0.5" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="19.84" y="191.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pBool (9 samples, 0.33%)</title><rect x="472.3" y="389" width="3.9" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="475.33" y="399.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>__irqentry_text_start (1 samples, 0.04%)</title><rect x="829.0" y="293" width="0.5" height="15.0" fill="rgb(230,93,93)" rx="2" ry="2"/>
+<text text-anchor="" x="832.03" y="303.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::sort (681 samples, 24.68%)</title><rect x="829.5" y="309" width="291.2" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="832.46" y="319.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)">Ltarget/quicksort/QuickSortIntr:::sort</text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>rebalance_domains (1 samples, 0.04%)</title><rect x="1157.1" y="261" width="0.4" height="15.0" fill="rgb(243,113,113)" rx="2" ry="2"/>
+<text text-anchor="" x="1160.07" y="271.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (16 samples, 0.58%)</title><rect x="1163.1" y="357" width="6.8" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="1166.06" y="367.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>SharedRuntime::handle_wrong_method (1 samples, 0.04%)</title><rect x="360.3" y="197" width="0.4" height="15.0" fill="rgb(217,217,65)" rx="2" ry="2"/>
+<text text-anchor="" x="363.28" y="207.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::sort (18 samples, 0.65%)</title><rect x="10.9" y="325" width="7.7" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="13.86" y="335.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (5 samples, 0.18%)</title><rect x="398.8" y="341" width="2.1" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="401.77" y="351.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>exit_to_usermode_loop (1 samples, 0.04%)</title><rect x="1148.5" y="309" width="0.4" height="15.0" fill="rgb(234,99,99)" rx="2" ry="2"/>
+<text text-anchor="" x="1151.51" y="319.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::sort (123 samples, 4.46%)</title><rect x="311.5" y="245" width="52.6" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="314.52" y="255.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)">Ltarg..</text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (7 samples, 0.25%)</title><rect x="1087.4" y="213" width="2.9" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="1090.35" y="223.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pBool (27 samples, 0.98%)</title><rect x="774.3" y="309" width="11.5" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="777.28" y="319.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::sort (43 samples, 1.56%)</title><rect x="1067.3" y="213" width="18.3" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="1070.25" y="223.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pBool (1 samples, 0.04%)</title><rect x="350.0" y="181" width="0.4" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="353.01" y="191.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Interpreter (2,757 samples, 99.93%)</title><rect x="10.0" y="469" width="1179.1" height="15.0" fill="rgb(243,112,112)" rx="2" ry="2"/>
+<text text-anchor="" x="13.00" y="479.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)">Interpreter</text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::swap (12 samples, 0.43%)</title><rect x="364.1" y="245" width="5.2" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="367.13" y="255.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (5 samples, 0.18%)</title><rect x="362.0" y="213" width="2.1" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="364.99" y="223.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (9 samples, 0.33%)</title><rect x="344.5" y="197" width="3.8" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="347.45" y="207.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::sort (3 samples, 0.11%)</title><rect x="16.0" y="213" width="1.3" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="18.99" y="223.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::sort (8 samples, 0.29%)</title><rect x="14.3" y="245" width="3.4" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="17.28" y="255.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Compilation::compile_method (1 samples, 0.04%)</title><rect x="1189.6" y="501" width="0.4" height="15.0" fill="rgb(214,214,64)" rx="2" ry="2"/>
+<text text-anchor="" x="1192.57" y="511.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>java_start (1 samples, 0.04%)</title><rect x="1189.6" y="613" width="0.4" height="15.0" fill="rgb(224,86,86)" rx="2" ry="2"/>
+<text text-anchor="" x="1192.57" y="623.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::swap (2 samples, 0.07%)</title><rect x="1083.1" y="181" width="0.8" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="1086.08" y="191.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>__softirqentry_text_start (1 samples, 0.04%)</title><rect x="1157.1" y="293" width="0.4" height="15.0" fill="rgb(231,95,95)" rx="2" ry="2"/>
+<text text-anchor="" x="1160.07" y="303.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>__schedule (1 samples, 0.04%)</title><rect x="310.7" y="165" width="0.4" height="15.0" fill="rgb(231,95,95)" rx="2" ry="2"/>
+<text text-anchor="" x="313.67" y="175.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::sort (476 samples, 17.25%)</title><rect x="179.4" y="309" width="203.5" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="182.37" y="319.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)">Ltarget/quicksort/QuickSor..</text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::sort (2 samples, 0.07%)</title><rect x="16.4" y="197" width="0.9" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="19.42" y="207.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (26 samples, 0.94%)</title><rect x="55.3" y="373" width="11.2" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="58.34" y="383.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>javac-12063 (2 samples, 0.07%)</title><rect x="1189.1" y="645" width="0.9" height="15.0" fill="rgb(224,86,86)" rx="2" ry="2"/>
+<text text-anchor="" x="1192.14" y="655.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::sort (16 samples, 0.58%)</title><rect x="11.7" y="293" width="6.9" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="14.71" y="303.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (68 samples, 2.46%)</title><rect x="428.3" y="405" width="29.1" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="431.28" y="415.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)">Ls..</text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pBool (2 samples, 0.07%)</title><rect x="1080.9" y="165" width="0.9" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="1083.94" y="175.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Interpreter (22 samples, 0.80%)</title><rect x="10.0" y="421" width="9.4" height="15.0" fill="rgb(243,112,112)" rx="2" ry="2"/>
+<text text-anchor="" x="13.00" y="431.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::swap (15 samples, 0.54%)</title><rect x="385.5" y="325" width="6.4" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="388.51" y="335.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>irq_exit (1 samples, 0.04%)</title><rect x="1075.4" y="149" width="0.4" height="15.0" fill="rgb(236,103,103)" rx="2" ry="2"/>
+<text text-anchor="" x="1078.38" y="159.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Runtime1::counter_overflow (1 samples, 0.04%)</title><rect x="13.0" y="245" width="0.4" height="15.0" fill="rgb(216,216,64)" rx="2" ry="2"/>
+<text text-anchor="" x="15.99" y="255.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (14 samples, 0.51%)</title><rect x="1142.5" y="325" width="6.0" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="1145.53" y="335.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::swap (8 samples, 0.29%)</title><rect x="360.7" y="229" width="3.4" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="363.71" y="239.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>IR::IR (1 samples, 0.04%)</title><rect x="1189.6" y="453" width="0.4" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="1192.57" y="463.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>irq_exit (1 samples, 0.04%)</title><rect x="1157.1" y="309" width="0.4" height="15.0" fill="rgb(236,103,103)" rx="2" ry="2"/>
+<text text-anchor="" x="1160.07" y="319.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pBool (11 samples, 0.40%)</title><rect x="423.6" y="405" width="4.7" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="426.58" y="415.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::swap (14 samples, 0.51%)</title><rect x="372.3" y="277" width="5.9" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="375.25" y="287.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::swap (6 samples, 0.22%)</title><rect x="382.9" y="309" width="2.6" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="385.95" y="319.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>call_continuation (2,757 samples, 99.93%)</title><rect x="10.0" y="613" width="1179.1" height="15.0" fill="rgb(226,89,89)" rx="2" ry="2"/>
+<text text-anchor="" x="13.00" y="623.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)">call_continuation</text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Interpreter (3 samples, 0.11%)</title><rect x="409.9" y="421" width="1.3" height="15.0" fill="rgb(243,112,112)" rx="2" ry="2"/>
+<text text-anchor="" x="412.89" y="431.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (6 samples, 0.22%)</title><rect x="1077.1" y="181" width="2.6" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="1080.09" y="191.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>smp_apic_timer_interrupt (1 samples, 0.04%)</title><rect x="1157.1" y="325" width="0.4" height="15.0" fill="rgb(230,94,94)" rx="2" ry="2"/>
+<text text-anchor="" x="1160.07" y="335.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>schedule (1 samples, 0.04%)</title><rect x="310.7" y="181" width="0.4" height="15.0" fill="rgb(239,107,107)" rx="2" ry="2"/>
+<text text-anchor="" x="313.67" y="191.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::registerAccess (1 samples, 0.04%)</title><rect x="149.9" y="325" width="0.4" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="152.86" y="335.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>GraphBuilder::iterate_bytecodes_for_block (1 samples, 0.04%)</title><rect x="1189.6" y="309" width="0.4" height="15.0" fill="rgb(222,222,67)" rx="2" ry="2"/>
+<text text-anchor="" x="1192.57" y="319.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>[perf-12063.map] (1 samples, 0.04%)</title><rect x="1189.1" y="613" width="0.5" height="15.0" fill="rgb(246,118,118)" rx="2" ry="2"/>
+<text text-anchor="" x="1192.14" y="623.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>GraphBuilder::try_inline_full (1 samples, 0.04%)</title><rect x="1189.6" y="341" width="0.4" height="15.0" fill="rgb(222,222,67)" rx="2" ry="2"/>
+<text text-anchor="" x="1192.57" y="351.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (12 samples, 0.43%)</title><rect x="1134.8" y="309" width="5.2" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="1137.83" y="319.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (13 samples, 0.47%)</title><rect x="1182.3" y="389" width="5.6" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="1185.30" y="399.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (11 samples, 0.40%)</title><rect x="401.3" y="357" width="4.7" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="404.34" y="367.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortIntr:::swap (2 samples, 0.07%)</title><rect x="1085.6" y="213" width="0.9" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="1088.64" y="223.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Ltarget/quicksort/QuickSortManager:::compareNaive (2 samples, 0.07%)</title><rect x="1188.3" y="421" width="0.8" height="15.0" fill="rgb(210,210,62)" rx="2" ry="2"/>
+<text text-anchor="" x="1191.29" y="431.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>methodHandle::methodHandle (1 samples, 0.04%)</title><rect x="360.3" y="69" width="0.4" height="15.0" fill="rgb(204,204,60)" rx="2" ry="2"/>
+<text text-anchor="" x="363.28" y="79.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (1 samples, 0.04%)</title><rect x="1083.5" y="165" width="0.4" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="1086.50" y="175.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (49 samples, 1.78%)</title><rect x="230.3" y="277" width="20.9" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="233.26" y="287.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pBool (4 samples, 0.14%)</title><rect x="75.9" y="357" width="1.7" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="78.86" y="367.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>SharedRuntime::resolve_opt_virtual_call_C (1 samples, 0.04%)</title><rect x="1189.1" y="581" width="0.5" height="15.0" fill="rgb(217,217,65)" rx="2" ry="2"/>
+<text text-anchor="" x="1192.14" y="591.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (102 samples, 3.70%)</title><rect x="785.8" y="309" width="43.7" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="788.83" y="319.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)">Lser..</text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pBool (2 samples, 0.07%)</title><rect x="334.6" y="213" width="0.9" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="337.62" y="223.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Compiler::compile_method (1 samples, 0.04%)</title><rect x="1189.6" y="533" width="0.4" height="15.0" fill="rgb(214,214,64)" rx="2" ry="2"/>
+<text text-anchor="" x="1192.57" y="543.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/PerturbationEngine:::pInt (65 samples, 2.36%)</title><rect x="924.8" y="277" width="27.8" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="927.83" y="287.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)">L..</text>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>[unknown] (1 samples, 0.04%)</title><rect x="1189.1" y="629" width="0.5" height="15.0" fill="rgb(243,112,112)" rx="2" ry="2"/>
+<text text-anchor="" x="1192.14" y="639.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>InstanceKlass::find_instance_method (1 samples, 0.04%)</title><rect x="1189.6" y="213" width="0.4" height="15.0" fill="rgb(218,218,65)" rx="2" ry="2"/>
+<text text-anchor="" x="1192.57" y="223.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)"/>
+</g>
+<g class="func_g" onmouseover="s(this)" onmouseout="c()" onclick="zoom(this)">
+<title>Lservices/interpolator/SinglePerturbationExplorer:::makeSpace (1,822 samples, 66.04%)</title><rect x="409.9" y="437" width="779.2" height="15.0" fill="rgb(208,208,62)" rx="2" ry="2"/>
+<text text-anchor="" x="412.89" y="447.5" font-size="12" font-family="Verdana" fill="rgb(0,0,0)">Lservices/interpolator/SinglePerturbationExplorer:::makeSpace</text>
+</g>
+</svg>

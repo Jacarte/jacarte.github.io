@@ -1,0 +1,35 @@
+title: Javier's Blog
+description: #
+baseurl: "" # the subpath of your site, e.g. /blog
+url: "http://jacarte.github.io" # the base hostname & protocol for your site, e.g. http://example.com
+site-twitter: #if your site has a twitter account, enter it here
+
+# Author Settings
+author: Javier Cabrera # add your name
+author-img: pic.png # add your photo
+about-author: PhD student at KTH Royal Institute of Technology. Software randomization against side channel attacks. Trustworthy Fullstack Computing (TRUSTFULL)  # add description
+social-twitter: # add your Twitter handle
+social-facebook: # add your Facebook handle
+social-github: jacarte # add your Github handle
+social-linkedin: # add your Linkedin handle
+social-email: javierca@kth.se # add your Email address
+
+future: true
+
+# Disqus
+discus-identifier: jacarte-github-io # add your discus identifier
+
+# Tracker
+analytics: UA-127898106-1 # Google Analytics
+
+# Build Settings
+markdown: kramdown
+plugins:
+  - jekyll-sitemap
+  - jekyll-paginate
+  - jemoji
+
+paginate: 8
+paginate_path: "/page/:num"
+
+exclude: ["node_modules", "gulpfile.js", "package.json", "yarn.lock"]
