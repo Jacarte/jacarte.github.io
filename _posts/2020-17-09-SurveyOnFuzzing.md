@@ -1,7 +1,7 @@
 ---
 layout: post
 title: Fuzzing Survey.
-date: 2019-02-19 13:32:20 +0300
+date: 2020-09-17 13:32:20 +0300
 description: Fuzzing is an automated technique for software testing. I will try to put in this blog entry some of the basics ideas about fuzzing, as well as pros and cons of some fuzzers and techniques to face specific issues.
 
 img: virus.png # Add image post (optional)
