@@ -8,6 +8,10 @@ nav: true
 
 
 
+<h3 class="year">2020</h3>
+
+- Introduction to High Performance Computing [FDD3258](https://www.kth.se/student/kurser/kurs/FDD3258?l=en)
+- Research preparation course in programming languages and formal methods [FDD3024](https://www.kth.se/student/kurser/kurs/FDD3024?l=en)
 
 <h3 class="year">2019</h3>
 
