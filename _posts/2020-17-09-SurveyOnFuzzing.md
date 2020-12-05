@@ -183,7 +183,7 @@ The choice of programming language also has an impact on the likelihood of vulne
   
 C/C++ is often chosen when speed and efficiency are important and so many key applications. Operating system internals and also web browsers, are written in that language. Taking in count the previous paragraph, implementing bounds checking in any language compiler put an extra instructions in the low-level code evaluation. 
 
-That's the main reason (I think) thats make fuzzers been focused to c/c++ programs, because there are more "core" programs written in such languages ... speed needs.
+That's the main reason (I think) that makes fuzzers to be focused to c/c++ programs, because there are more "core" programs written in such languages.
 
   
 #### Java, for an instance...
