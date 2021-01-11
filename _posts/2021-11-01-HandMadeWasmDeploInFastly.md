@@ -43,7 +43,7 @@ Well, the `main` function of the Rust project clearly has where to add custom co
 
 The first thought is to decompile the generated Wasm module to the textual format and then add the custom Wasm code in the return place. If you try to find this place inside the generated Wasm, the work is nearly impossible since the HTTP service's abstraction is enormous in the Wasm representation. 
 
-But, we can add a function in the `main.rs` that will contain the custom Wasm code, call this function from the Response body (all this in Rust without complication). And then, find for this function in the Wasm binary, adding the custom code following the previous steps. 
+But, we can add a function in the `main.rs` that will contain the custom Wasm code and call this function from the Response body (all this writing Rust without complication). And then, find for this function in the Wasm binary, adding the custom code following the previous steps. 
 
 ```Rust
 pub fn template() {
@@ -114,6 +114,87 @@ If we rename the declaration and we add the custom code, we have the following f
 If the Wasm is still invalid, the reason is that we are exporting a function that does not exist anymore, `template`. After manually removing the export, we have a complete valid Wasm binary.
 
 The final step is to compress the modified wasm file and run `fastly compute deploy`. 
+
+## Automatic script for Babbage problem code
+
+The declaration for both functions is not necessary, we can declare the `bypass` function directly as an extern reference. However, since we wanted to automate the process of the injection, we wanted to have the `template` function already declared inside the Wasm to be able to easily change it. In the following script we inject a custom Wasm code in the Wasm binary. We inject the `Babbage problem` code to get this calculation from the Edge.
+
+```sh
+fastly compute build
+
+PROJECT_NAME="hello-world"
+WORKDIR=untar
+TEMPLATE_FUNCTION="template"
+
+cp pkg/$PROJECT_NAME.tar.gz $WORKDIR
+
+tar -xvzf $WORKDIR/$PROJECT_NAME.tar.gz --directory  $WORKDIR
+
+# Copy binary to manage
+cd $WORKDIR/$PROJECT_NAME/bin
+
+wasm2wat main.wasm -o main.wat
+
+read -r -d '' BABBAGE_PROBLEM << EOM
+(local i32 i32 i32 i32)
+    global.get 0
+    i32.const 16
+    i32.sub
+    local.tee 0
+    global.set 0
+    i32.const -1
+    local.set 1
+    block  ;; label = @1
+      loop  ;; label = @2
+        local.get 1
+        i32.const 1
+        i32.add
+        local.tee 1
+        local.get 1
+        i32.mul
+        local.tee 2
+        i32.const 1000000
+        i32.rem_u
+        local.set 3
+        local.get 2
+        i32.const 2147483647
+        i32.eq
+        br_if 1 (;@1;)
+        local.get 3
+        i32.const 269696
+        i32.ne
+        br_if 0 (;@2;)
+      end
+    end
+    local.get 1
+EOM
+
+# Remove exporting
+sed -i -e '/export "template"/d' main.wat 
+
+# Remove importing of bypass
+sed -i -e '/import "env" "bypass"/d' main.wat 
+
+# Replacing function name
+sed -i -e 's/func \$template/func $bypass/g' main.wat 
+
+# Remove the call to bypass function
+export REPLACE=$BABBAGE_PROBLEM
+perl -pe 's/call \$bypass\)/$ENV{REPLACE})/g' -i main.wat 
+
+# Recompile again the modified Wasm module
+wat2wasm main.wat -o main.wasm
+
+cd ../../
+
+tar -czf  $PROJECT_NAME.tar.gz $PROJECT_NAME 
+
+cd ..
+
+fastly compute deploy --path $WORKDIR/$PROJECT_NAME.tar.gz
+
+
+```
 
 ## Limitations
 
