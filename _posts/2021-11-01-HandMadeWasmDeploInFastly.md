@@ -31,7 +31,7 @@ The **third** one (`deploy`), checks the checksum of the tar file and if it is d
 
 But, what if we want to execute a pre-existent Wasm binary in Fastly as a service ?
 
-## Fastly API inside the Wasm module
+## Inside the Wasm module
 
 Inspecting the generated Wasm binary, it is clear that we need some way to interact with the execution environment of the HTTP service. The Fastly crate adds the needed infrastructure to be able to execute the Wasm module under the HTTP service of Fastly. This infrastructure is added as imports inside the Wasm module along with the WASI functions.  And the fact is that this is true either you use Fastly CLI, [Terrarium](https://www.fastly.com/blog/edge-programming-rust-web-assembly) or any other pipeline to build the package. The bad news is that this infrastructure is not provided by any other tool and to implement it from scratch is not a good idea. The good news, is that, we can use the Rust boilerplate to wrap custom Wasm codes. 
 
