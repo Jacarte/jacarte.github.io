@@ -180,7 +180,7 @@ sed -i -e '/import "env" "bypass"/d' main.wat
 # Replacing function name
 sed -i -e 's/func \$template/func $bypass/g' main.wat 
 
-# Remove the call to bypass function
+# Replace the call to bypass function by the custom code
 export REPLACE=$BABBAGE_PROBLEM
 perl -pe 's/call \$bypass\)/$ENV{REPLACE})/g' -i main.wat 
 
