@@ -117,7 +117,9 @@ The final step is to compress the modified wasm file and run `fastly compute dep
 
 ## Automatic script for Babbage problem code
 
-The declaration for both functions is not necessary, we can declare the `bypass` function directly as an extern reference. However, since we wanted to automate the process of the injection, we wanted to have the `template` function already declared inside the Wasm to be able to easily change it. In the following script we inject a custom Wasm code in the Wasm binary. We inject the `Babbage problem` code to get this calculation from the Edge.
+The declaration for both functions is not necessary, we can declare the `bypass` function directly as an extern reference. However, since we wanted to automate the process of the injection, we wanted to have the `template` function already declared inside the Wasm to be able to easily change it. 
+
+In the following script we inject a custom Wasm code in the Wasm binary. We inject the `Babbage problem` code to get this calculation from the Edge.
 
 ```sh
 fastly compute build
