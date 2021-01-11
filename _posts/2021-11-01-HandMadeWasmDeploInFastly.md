@@ -40,9 +40,9 @@ Inspecting the generated Wasm binary, it is clear that we need some way to inter
 
 If you are one of those people that write hand made binary code, how to add this code to the package ? You can still use the boilerplate of the Rust project to do so. Well, the `main` function of the Rust project clearly has where to add custom code : `(&Method::GET, "/") => Ok(Response::builder().status(StatusCode::OK).body(Body::from(...))?)`. 
 
-The first thought is to decompile the generated Wasm module to the textual format manually and then add the custom code in the return place. If you try to find this place inside the generated Wasm, the work is nearly impossible since the HTTP service's abstraction is enormous in the Wasm code. 
+The first thought is to decompile the generated Wasm module to the textual format and then add the custom Wasm code in the return place. If you try to find this place inside the generated Wasm, the work is nearly impossible since the HTTP service's abstraction is enormous in the Wasm representation. 
 
-But, we can add a function in the `main.rs` that will contain the custom Wasm code, call this function from the Response body (all this in Rust without complication). And then, find for this function in the Wasm binary, adding the custom code. 
+But, we can add a function in the `main.rs` that will contain the custom Wasm code, call this function from the Response body (all this in Rust without complication). And then, find for this function in the Wasm binary, adding the custom code following the previous steps. 
 
 ```Rust
 pub fn template() {
@@ -73,9 +73,28 @@ pub fn template() {
 }
 ```
 
-Now, the call to fill the response body is replaced by an external function named `bypass`. The external function `bypass` is declared in the module as an import. In the execution of the Wasm binary on the Edge we wont have this import (or we dont want to have it), we need to manually remove it. But, what happens then with the call to the `bypass` function ? The declared `template` function has the same signature, this means that we can rename the function to `bypass` and we solve this problem for the Wasm binary. 
+Now, the call to fill the response body is replaced by an external function named `bypass` inside the Wasm module.
 
-This is how the `template` function will look like.
+```
+...
+i32.const 73
+call $memcpy
+drop
+local.get 0
+
+call $bypass
+
+i32.store offset=420
+local.get 0
+i32.const 0
+i32.store offset=464
+local.get 0
+i64.const 1
+...
+```
+ The external function `bypass` is declared in the module as an import. In the execution of the Wasm binary on the Edge we wont have this import (or we dont want to have it), we need to manually remove it. But, what happens then with the call to the `bypass` function ? The declared `template` function has the same signature, this means that we can rename the function to `bypass` and we solve this problem for the Wasm binary. 
+
+This is how the `template` function looks like.
 
 ```
 (func $template (type 0) (result i32) 
@@ -83,7 +102,7 @@ This is how the `template` function will look like.
 ) 
 ```
 
-If we rename the declaration and weinject the custom code, we will have the following function.
+If we rename the declaration and we inject the custom code, we have the following function.
 
 ```
 (func $bypass (type 0) (result i32) 
