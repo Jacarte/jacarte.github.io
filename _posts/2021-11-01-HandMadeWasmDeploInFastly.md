@@ -17,7 +17,7 @@ Fastly currently supports to deploy WebAssembly packages throught Rust or Assemb
 
 Fastly provides a cli tool to be able to interact with their API. It is composed by several modules. The `compute` module of the [cli](https://github.com/fastly/cli), has three main commands, `init`, `build` and `deploy`. 
 
-The first one creates the HTTP service and the project boilerplate in the language of your preference: `Rust` or `AssemblyScript`.
+The first one creates the HTTP service and the project boilerplate in the language of your preference: `Rust` or `TypeScript`.
 
 The second one, builds your project and creates a tar file with the following structure if you select `Rust` from the begining:
 ```
@@ -26,7 +26,6 @@ The second one, builds your project and creates a tar file with the following st
 - Cargo.toml
 - fastly.toml
 ```
-The fastly crate adds the needed infrastructure to be able to execute the Wasm module under the HTTP service of Fastly. This infrastructure is added as imports inside the Wasm module along with the WASI functions. 
 
 The third one (`deploy`), checks the checksum of the tar file and if is different to the deployed one, it is submitted to the network.
 
@@ -34,7 +33,7 @@ But, what if we want to execute a custom, created by other pipeline Wasm binary 
 
 ## Fastly API inside the Wasm module
 
-Inspecting the generated Wasm binary, it is clear that we need some way to interact with the execution environment of the HTTP service. And the fact is that this is true either you use Fastly CLI, [Terrarium](https://www.fastly.com/blog/edge-programming-rust-web-assembly) or any other pipeline to build the package. The bad news is that this infrastructure is not provided by any other tool and to implement it from scratch is not a good idea. The good news, is that, we can use the Rust boilerplate to wrap custom Wasm codes. 
+Inspecting the generated Wasm binary, it is clear that we need some way to interact with the execution environment of the HTTP service. The Fastly crate adds the needed infrastructure to be able to execute the Wasm module under the HTTP service of Fastly. This infrastructure is added as imports inside the Wasm module along with the WASI functions.  And the fact is that this is true either you use Fastly CLI, [Terrarium](https://www.fastly.com/blog/edge-programming-rust-web-assembly) or any other pipeline to build the package. The bad news is that this infrastructure is not provided by any other tool and to implement it from scratch is not a good idea. The good news, is that, we can use the Rust boilerplate to wrap custom Wasm codes. 
 
 ## Adding your custom Wasm code
 
