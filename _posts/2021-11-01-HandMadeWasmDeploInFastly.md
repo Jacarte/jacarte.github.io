@@ -103,7 +103,7 @@ This is how the `template` function looks like.
 ) 
 ```
 
-If we rename the declaration and we inject the custom code, we have the following function.
+If we rename the declaration and we add the custom code, we have the following function.
 
 ```
 (func $bypass (type 0) (result i32) 
@@ -115,3 +115,6 @@ If the Wasm is still invalid, the reason is that we are exporting a function tha
 
 The final step is to compress the modified wasm file and run `fastly compute deploy`. 
 
+## Limitations
+
+In the next post :)
