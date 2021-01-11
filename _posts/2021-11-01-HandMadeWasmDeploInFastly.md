@@ -17,9 +17,9 @@ Fastly currently supports to deploy WebAssembly packages throught Rust or Assemb
 
 Fastly provides a cli tool to be able to interact with their API. It is composed by several modules. The `compute` module of the [cli](https://github.com/fastly/cli), has three main commands, `init`, `build` and `deploy`. 
 
-The first one creates the HTTP service and the project boilerplate in the language of your preference: `Rust` or `TypeScript`.
+The **first** one creates the HTTP service and the project boilerplate in the language of your preference: `Rust` or `TypeScript`.
 
-The second one, builds your project and creates a tar file with the following structure if you select `Rust` from the begining:
+The **second** one, builds your project and creates a tar file with the following structure if you select `Rust` from the begining:
 ```
 - bin 
 -     \ main.wasm
@@ -27,9 +27,9 @@ The second one, builds your project and creates a tar file with the following st
 - fastly.toml
 ```
 
-The third one (`deploy`), checks the checksum of the tar file and if is different to the deployed one, it is submitted to the network.
+The **third** one (`deploy`), checks the checksum of the tar file and if it is different to the deployed one, then it is submitted to the network.
 
-But, what if we want to execute a custom, created by other pipeline Wasm binary in Fastly as a service ?
+But, what if we want to execute a pre-existent Wasm binary in Fastly as a service ?
 
 ## Fastly API inside the Wasm module
 
@@ -37,7 +37,9 @@ Inspecting the generated Wasm binary, it is clear that we need some way to inter
 
 ## Adding your custom Wasm code
 
-If you are one of those people that write hand made binary code, how to add this code to the package ? You can still use the boilerplate of the Rust project to do so. Well, the `main` function of the Rust project clearly has where to add custom code : `(&Method::GET, "/") => Ok(Response::builder().status(StatusCode::OK).body(Body::from(...))?)`. 
+If you are one of those people that write hand made binary code, how to add this code to the package ? You can still use the boilerplate of the Rust project to do so. 
+
+Well, the `main` function of the Rust project clearly has where to add custom code : `(&Method::GET, "/") => Ok(Response::builder().status(StatusCode::OK).body(Body::from(...))?)`. 
 
 The first thought is to decompile the generated Wasm module to the textual format and then add the custom Wasm code in the return place. If you try to find this place inside the generated Wasm, the work is nearly impossible since the HTTP service's abstraction is enormous in the Wasm representation. 
 
