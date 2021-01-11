@@ -124,8 +124,6 @@ In the following script we inject a custom Wasm code in the Wasm binary. We inje
 ```sh
 fastly compute build
 
-PROJECT_NAME="hello-world"
-WORKDIR=untar
 TEMPLATE_FUNCTION="template"
 
 cp pkg/$PROJECT_NAME.tar.gz $WORKDIR
