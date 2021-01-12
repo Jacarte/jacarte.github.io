@@ -5,7 +5,7 @@ date: 2021-01-11 13:32:20 +0300
 description: I write a little tutorial about how to use Fastly Rust boilerplate to deploy custom hand written Wasm code.
 
 fig-caption: # Add figcaption (optional)
-tags: [Fuzzing, Angora, AFL, Java]
+tags: [Rust, WebAssembly, asm, metaprograming]
 comments: true
 ---
 
@@ -125,7 +125,7 @@ extern {
 }
 
 ```
-The official documentation describe the motivation for this macro as follows.
+The official documentation describes the motivation for this macro as follows.
 > There are two main use cases for this feature. The first is that it allows functions to be written completely in assembly, which mostly eliminates the need for a naked attribute. This is mainly useful for function that use a custom calling convention, such as interrupt handlers.
 
 > Another important use case is that it allows external assembly files to be used in a Rust module without needing hacks in the build system:
