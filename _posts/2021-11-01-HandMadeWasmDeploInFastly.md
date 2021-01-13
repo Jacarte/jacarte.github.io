@@ -18,9 +18,9 @@ Fastly provides the way to decentralize your applications' architecture using We
 
 > Compute@Edge is a computation platform capable of running custom binaries that you compile on your own systems and upload to Fastly...
 
-# Rust
-
 Fastly is Rust language enthusiastic. The applications that you submit to the Compute@Edge service are WebAsembly binaries that run on top of a super performant interpreter implemented in Rust, called Lucet. The first support to build, package, and deploy your applications is meant for you to implement it in Rust. Fastly provides a Rust library for HTTP services implementation.
+
+# Rust
 
 Following the official definition of [Rust](https://www.rust-lang.org/)
 > A language empowering everyone to build reliable and efficient software.
