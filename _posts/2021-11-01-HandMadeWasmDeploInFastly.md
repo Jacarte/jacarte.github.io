@@ -49,7 +49,7 @@ fn main(mut req: Request<Body>) -> Result<impl ResponseExt, Error> {
 
 All you need to do is to compile this code as `cargo build --target wasm32-wasi`.
 
-## TODO few sentences about WASI.
+## TODO few sentences about WASI and how the service works, entrypoint, request, response etc.
 
 # But, what if ... ?
 
@@ -191,7 +191,7 @@ This code is injected in the compiled service Wasm exactly as it is written befo
 
 # Putting all together
 
-Lets put all together in our new service.
+Lets put all together in our new service. 
 
 ```Rust
 #![feature(asm)]
@@ -223,7 +223,6 @@ extern {
 }
 
 ```
-
 
 # Limitations
 
