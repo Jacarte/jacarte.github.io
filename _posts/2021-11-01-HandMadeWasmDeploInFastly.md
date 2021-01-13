@@ -186,7 +186,7 @@ This code is injected in the compiled service Wasm exactly as it is written befo
 
 # Putting all together
 
-Lets put all together in our new service. 
+Lets put all together in our new service. This code can be compiled to `wasm32-wasi` and then submitted to the Fastly Compute@Edge service.
 
 ```rs
 #![feature(asm)]
