@@ -25,9 +25,9 @@ Fastly is Rust language enthusiastic. The applications that you submit to the Co
 Following the official definition of [Rust](https://www.rust-lang.org/)
 > A language empowering everyone to build reliable and efficient software.
 
-Rust provides this claim by being memory safe and performant. It supports the compilation of the source code to WebAssembly almost since the release of Rust's toolchain. To me, this was the main reason why Fastly is betting for WebAssembly as the language to run the applications in the edge.
+Rust makes this claim because it is memory safe and performant. It supports the compilation of the source code to WebAssembly almost since the release of Rust's toolchain. To me, this was the main reason why Fastly is betting for WebAssembly as the language to run the applications in the edge.
 
-To run your first "hello world" in Fastly Edge computing, you can follow this [tutorial](https://developer.fastly.com/learning/compute/). Fastly provides a CLI tool to interact with the computing edge service API, creating, delete, and deploy services. Each service is deployed as an HTTP service. When you deploy with the CLI tool, you submit a Wasm binary with a specific structure. I meant a particular form that the Wasm module needs, to provide all the plumping to interact with HTTP calls and the service's application entry point. Besides, the fastly cli provides the boilerplate for creating a Rust project and when it is compiled to Wasm, all the this infrastructure is built.
+To run your first "hello world" in Fastly Edge computing, you can follow this [tutorial](https://developer.fastly.com/learning/compute/). Fastly provides a CLI tool to interact with the computing edge service API, creating, deleting, and deploying services. Each service is deployed as an HTTP service. When you make a deploy with the CLI tool, you submit a Wasm binary with a specific structure. I meant a particular form that the Wasm module needs, to provide all the plumbing to interact with HTTP calls and the service's application entry point. The fastly CLI provides the boilerplate for creating a Rust project and when it is compiled to Wasm, all the this infrastructure is built.
 
 
 For example, the following Rust code is all you need to deploy a service in the Compute@Edge service of Fastly.
