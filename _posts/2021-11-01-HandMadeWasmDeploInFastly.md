@@ -53,7 +53,7 @@ All you need to do is to compile this code as `cargo build --target wasm32-wasi`
 
 Suppose you have a Wasm binary, but you don't have the source code for this Wasm module, or simply this Wasm module does not come from a standard compilation pipeline like the previously mentioned. It lacks the needed ABI to deal with fastly HTTP services. Thus, you cannot deploy this binary directly to the Compute@Edge service because it is not valid. On the other hand, you rely on the Rust backend to generate Wasm code, and sometimes the generated code does not have the quality that a hand-made Wasm can achieve. (TODO add sentences about performance of hand made for example)
 
-One way to deal with this problem is to search for the functionality you want to deploy, migrate/implement it to/in Rust, and then integrate the fastly Rust framework. But this is not fun :). The other way is to try to embed the Wasm binary functionality to Rust. To do so, you can use `asm` Macro of Rust to directly write assembly code (depending on the target architecture).
+One way to deal with this problem is to search for the functionality you want to deploy, migrate/implement it to/in Rust, and then integrate the fastly Rust framework. But this is not fun :grin: . The other way is to try to embed the Wasm binary functionality to Rust. To do so, you can use `asm` Macro of Rust to directly write assembly code (depending on the target architecture).
 
 ## Rust inline asm
 
