@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Hand made Wasm deployed in Fastly in 10 mins (Work in progress).
+title: How to deploy hand made Wasm code in Fastly Compute@Edge (Work in progress).
 date: 2021-01-11 13:32:20 +0300
 description: I write a little tutorial about how to use Fastly Rust boilerplate to deploy custom hand written Wasm code.
 
