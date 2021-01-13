@@ -11,7 +11,7 @@ comments: true
 
 # Fastly and the Edge Computing
 
-Fastly offers a powerful edge cloud service; it brings the tools to provide apps optimized for speed and scale. Edge computing is computing that is done at or near the customer's requests instead of relying on the cloud at one of a dozen data centers to do all the work. Literally, this has a geographic meaning. It doesn't mean the cloud will disappear. It means the cloud is coming to you.
+Fastly offers a powerful edge cloud service; it brings the tools to provide apps optimized for speed and scale. Edge computing is done at or near the customer's requests instead of relying on the cloud at one of a dozen data centers to do all the work. Literally, this has a geographic meaning. It doesn't mean the cloud will disappear. It means the cloud is coming to you.
 
 
 Fastly provides the way to decentralize your applications' architecture using WebAssembly that executes on the Edge, following the words from Fastly
