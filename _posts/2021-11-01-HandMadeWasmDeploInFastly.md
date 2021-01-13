@@ -166,9 +166,12 @@ This means that you can declare functions directly with assembly instructions in
 
 1. Declare the new function with its type.
 2. Declare the locals used in the Wasm code
-3. Replace the `end` instructions from the WAT code to the respective LLVM S `end instructions`.
+3. Replace the `end` instructions from the WAT code to the respective LLVM S `end` instructions.
+    
+    31. We can use the standard algorithm of counting balanced parenthesis, (TODO, explain).
+
 4. Copy the transformed code to the body of the function in the LLVM s format.
-5. Close the function with the `function_end` instruction.
+5. Close the function with the `end_function`  instruction.
 
 Lets suppose that we want a function that returns the meaning of life and everything, `42`. In the LLVM s format for WebAssembly it should look like. 
 
@@ -223,6 +226,7 @@ extern {
 }
 
 ```
+
 
 # Limitations
 
