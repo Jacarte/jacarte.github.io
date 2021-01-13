@@ -2,7 +2,7 @@
 layout: post
 title: How to deploy hand made Wasm code in Fastly Compute@Edge (Work in progress).
 date: 2021-01-11 13:32:20 +0300
-description: I write a little tutorial about how to use Fastly Rust boilerplate to deploy custom hand written Wasm code.
+description: How to deploy your first Fastly's Compute@Edge service ? How to deploy custom Wasm to it ? ... and a little bit of metaprogramming with Rust.
 
 fig-caption: # Add figcaption (optional)
 tags: [Rust, WebAssembly, asm, metaprograming]
