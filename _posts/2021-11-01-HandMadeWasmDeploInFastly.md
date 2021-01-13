@@ -147,18 +147,18 @@ The official documentation describes the motivation for this macro as follows.
 
 > Another important use case is that it allows external assembly files to be used in a Rust module without needing hacks in the build system:
 
-This means that you can declare functions directly with assembly instructions instead of writing the body in a defined Rust function. We can write WAT code now in the Rust code, and we will get this code in the final Wasm binary. However, the `global_asm` macro expects LLVM s format, which is slightly different from the WAT format. For example, we know that blocks and loops in Wasm explicitly finish with `end` instructions. In the LLVM s format, the `end` instructions need to be declared with the semantic of the ending control flow; in this case, `end_block` and `end_loop`, respectively. The same phenomenon happens with the declaration of the function and the local variables. The good news is that the translation from WAT format to LLVM s can be done linearly.
+This means that you can declare functions directly with assembly instructions instead of writing the body in a defined Rust function. We can write WAT code now in the Rust code, and we will get this code in the final Wasm binary. However, the `global_asm` macro expects [LLVM MIR format](https://llvm.org/docs/MIRLangRef.html), which is slightly different from the [Wat format](https://developer.mozilla.org/en-US/docs/WebAssembly/Understanding_the_text_format). For example, we know that blocks and loops in Wasm explicitly finish with `end` instructions. In the LLVM MIR format, the `end` instructions need to be declared with the semantic of the ending control flow; in this case, `end_block` and `end_loop`, respectively. The same phenomenon happens with the declaration of the function and the local variables. The good news is that the translation from WAT format to LLVM MIR can be done linearly.
 
 1. Declare the new function with its type.
 2. Declare the locals used in the Wasm code
-3. Replace the `end` instructions from the WAT code to the respective LLVM S `end` instructions.
+3. Replace the `end` instructions from the WAT code to the respective LLVM MIR `end` instructions.
     
     31. For example, you can use the naive algorithm of counting balanced parenthesis.
 
-4. Copy the transformed code to the body of the function in the LLVM s format.
+4. Copy the transformed code to the body of the function in the LLVM MIR format.
 5. Close the function with the `end_function`  instruction.
 
-Lets suppose that we want a function that returns the meaning of life and everything, `42`. In the LLVM s format for WebAssembly it should look like. 
+Lets suppose that we want a function that returns the meaning of life and everything, `42`. In the LLVM MIR format for WebAssembly it should look like. 
 
 ```llvm
     .type	life,@function
