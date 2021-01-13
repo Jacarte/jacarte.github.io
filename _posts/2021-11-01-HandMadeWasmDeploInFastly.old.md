@@ -16,20 +16,41 @@ Edge computing is computing that is done at or near the customer requests, and l
 
 > ...is a computation platform capable of running custom binaries that you compile on your own systems and upload to Fastly...
 
-Fastly provides the way to easily decentralize the architecture of your applications.
+Fastly provides the way to easily decentralize the architecture of your applications using WebAssembly that executes on the Edge.
 
 
 # Rust
 
-Fastly is Rust language entusiastic. The applications that you submit to the Compute@Edge service are WebAsembly binaries that run on top of a super performant intepreter implemented in Rust, called Lucet. And, the first support to build, package and deploy your applications is meant for you to implement it in Rust.
+Fastly is Rust language entusiastic. The applications that you submit to the Compute@Edge service are WebAsembly binaries that run on top of a super performant intepreter implemented in Rust, called Lucet. And, the first support to build, package and deploy your applications is meant for you to implement it in Rust. In fact, Fastly provides a Rust library for HTTP services implementation.
 
 Following the official definition of [Rust](https://www.rust-lang.org/)
 > A language empowering everyone to build reliable and efficient software.
 
 Rust provides this claim by being memory safe and performant. It supports the compilation of the source code to WebAssembly almost since the release of the Rust's toolchain. To me, this was the main reason why the Fastly  is bidding for WebAssembly as the language to run the applications in the edge.
 
-To run your first hello world in Fastly Edge computing, you can follow this [tutorial](https://developer.fastly.com/learning/compute/). Fastly provides a cli tool to interact with the computing edge service API, being able to create, delete and deploy services. Each service is deployed as a https service. When you deploy with the cli tool, you submit a Wasm binary with an specific structure. I meant specific structure to that the Wasm module needs to provide all the plumping to be able to interact with HTTP calls and the application entrypoint of the service. Fastly provides a Rust crate for HTTP services implementation. Besides, the fastly cli provides the boilerplate for creating a Rust project and when it is compiled to Wasm, all the this infrastructure is built. 
+To run your first hello world in Fastly Edge computing, you can follow this [tutorial](https://developer.fastly.com/learning/compute/). Fastly provides a cli tool to interact with the computing edge service API, being able to create, delete and deploy services. Each service is deployed as a https service. When you deploy with the cli tool, you submit a Wasm binary with an specific structure. I meant specific structure to that the Wasm module needs to provide all the plumping to be able to interact with HTTP calls and the application entrypoint of the service.  Besides, the fastly cli provides the boilerplate for creating a Rust project and when it is compiled to Wasm, all the this infrastructure is built. 
 
+
+For example, the following Rust code is all you need to depoy a service in the Compute@Edge service of Fastly.
+
+```Rust
+use fastly::http::{HeaderValue, Method, StatusCode};
+use fastly::request::CacheOverride;
+use fastly::{Body, Error, Request, RequestExt, Response, ResponseExt};
+
+#[fastly::main]
+fn main(mut req: Request<Body>) -> Result<impl ResponseExt, Error> {
+    Ok(Response::builder()
+            .status(StatusCode::OK)
+            .body(Body::from(/*Whatever*/))?)
+}
+
+
+```
+
+All you need to do is to compile this code as `cargo build --target wasm32-wasi`.
+
+## TODO few sentences about WASI.
 
 # But, what if ... ?
 
@@ -78,10 +99,10 @@ So, in theory the only thing that we need to do is to create a Rust function and
 
 # TODO explain the code
 
-When we compile the code above to Wasm we obtain the following code.
+When we compile the code above to Wasm we obtain the following code for the `unsafe_wasm` function.
 
 ```llvm
-(func $template2 (type 0) (result i32)
+(func $unsafe_wasm (type 0) (result i32)
     (local i32 i32 i32 i32 i32 i32 i32 i32)
     global.get 0
     local.set 0
@@ -93,7 +114,7 @@ When we compile the code above to Wasm we obtain the following code.
     local.set 2
     local.get 2
     global.set 0 
-    i32.const 42 ; Here is our code
+    i32.const 42 ; Here is the code
     local.set 3  ; -----------------
     local.get 3
     local.set 4
@@ -115,17 +136,17 @@ When we compile the code above to Wasm we obtain the following code.
     return)
 ```
 
-We inserted 2 instructions, however the generated code contains 29. This result is not good, we are expecting exactly what we injected. The thing is that the backend injects all the plumbing to ensure that the injected code does not interfiere with the other code. 
+We inserted 2 instructions, however the generated code contains 29. This result is not good, we are expecting exactly what we injected. The thing is that the backend injects all the plumbing to ensure that the injected code does not interfiere with the service code. 
 
 ## global_asm macro
 
-[This RFC](https://rust-lang.github.io/rfcs/1548-global-asm.html) exposes LLVM's support for module-level inline assembly by adding a global_asm! macro. 
+[This RFC](https://rust-lang.github.io/rfcs/1548-global-asm.html) exposes LLVM's support for module-level inline assembly by adding a `global_asm!` macro. 
 
 ```Rust
 global_asm!(r#"
 .globl my_asm_func
 my_asm_func:
-    i32 const 42
+    
 "#);
 
 extern {
@@ -138,19 +159,62 @@ The official documentation describes the motivation for this macro as follows.
 
 > Another important use case is that it allows external assembly files to be used in a Rust module without needing hacks in the build system:
 
-## TODO LLVM s format is different to Wat format
+This means that you can declare functions directly with assembly instructions instead of writing the body in a defined Rust function. We can write WAT code directly in the Rust code and we will get this code the final Wasm binary. Howwever, the `global_asm` macro expects LLVM s format, which is slightly different to WAT format. For example, we know that blocks and loops in Wasm explicitly ends with `end` instructions, in the LLVM s format the `end` instructions need to be declared with the semantic of the ending control flow; in this case `end_block` and `end_loop` respectively. The same phenomenon happens with the declaration of the function and the local variables. The good new is that the translation from WAT format to LLVM s can be done linearly
 
-## TODO Transform the code to LLVM s format
+Lets suppose that we want a function that returns the meaning of life and everything, `42`. In the LLVM s format for WebAssembly it should look like. 
 
-## TODO Show example
+```llvm
+    .type	life,@function
+        life:
+    .functype	life () -> (i32)
+        i32.const 42
+    end_function
+```
 
-# TODO Putting all together
+This code is injected in the compiled service Wasm exactly as it is written before. Check the Wasm code below.
 
-Example with the Babbage problem
+```llvm
+(func $life (type 0) (result i32)
+    (local i32 i32 i32 i32)
+    i32.const 42)
+```
+
+# Putting all together
+
+Lets put all together in our new service.
+
+```Rust
+#![feature(asm)]
+#![feature(global_asm)]
+
+use fastly::http::{HeaderValue, Method, StatusCode};
+use fastly::request::CacheOverride;
+use fastly::{Body, Error, Request, RequestExt, Response, ResponseExt};
+
+#[fastly::main]
+fn main(mut req: Request<Body>) -> Result<impl ResponseExt, Error> {
+    Ok(Response::builder()
+            .status(StatusCode::OK)
+            .body(Body::from(unsafe {
+                life()
+            }.to_string()))?)
+}
+
+global_asm!(r#"
+    .type	life,@function
+        life:
+    .functype	life () -> (i32)
+        i32.const 42
+    end_function
+"#);
+
+extern {
+    fn life() -> i32;
+}
+
+```
+
 
 # Limitations
 
-What happens with the memory involving code ?
-
-What if the code uses specific memory operations ?
-
+We are able to run any custom Wasm code in a Fastly service package. But, what if the injected code involves memory operations ? This solution does not scale if we are not taking into account how the service interact with its own memory. In a next post we will propose a solution for it.
