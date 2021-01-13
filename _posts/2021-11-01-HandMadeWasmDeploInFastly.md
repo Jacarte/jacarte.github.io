@@ -9,23 +9,18 @@ tags: [Rust, WebAssembly, asm, metaprograming]
 comments: true
 ---
 
-# Fastly and the Edge Computing
+# Edge Computing and Fastly
 
 Fastly offers a powerful edge cloud service; it brings the tools to provide apps optimized for speed and scale. Edge computing is done at or near the customer's requests instead of relying on the cloud at one of a dozen data centers to do all the work. Literally, this has a geographic meaning. It doesn't mean the cloud will disappear. It means the cloud is coming to you.
 
 
-Fastly provides the way to decentralize your applications' architecture using WebAssembly that executes on the Edge, following the words from Fastly
+Fastly provides the way to decentralize your application's architecture using WebAssembly that executes on the Edge, following the words from Fastly
 
 > Compute@Edge is a computation platform capable of running custom binaries that you compile on your own systems and upload to Fastly...
 
 Fastly is Rust language enthusiastic. The applications that you submit to the Compute@Edge service are WebAsembly binaries that run on top of a super performant interpreter implemented in Rust, called Lucet. Fastly also provides a Rust library for HTTP services implementation, which means that you are fully supported to implement your services in Rust and then compile them to WebAssembly.
 
-# Rust
-
-Following the official definition of [Rust](https://www.rust-lang.org/)
-> A language empowering everyone to build reliable and efficient software.
-
-Rust makes this claim because it is memory safe and performant. It supports the compilation of the source code to WebAssembly almost since the release of Rust's toolchain. To me, this is one of the  reasons why Fastly is betting for WebAssembly as the language to run applications in the edge.
+Rust is a relatively new language, it is memory safe and performant. It supports the compilation of the source code to WebAssembly almost since the release of Rust's toolchain. 
 
 To run your first "hello world" in Fastly Edge computing, you can follow this [tutorial](https://developer.fastly.com/learning/compute/). Fastly provides a CLI tool to interact with the computing edge service API, to create, delete, and deploy services. Each service is deployed as an HTTP service. When you make a deploy with the CLI tool, you submit a Wasm binary with a specific structure. I meant a particular form that the Wasm module needs, to provide all the plumbing to interact with HTTP calls and the service's application entry point. The fastly CLI provides the boilerplate for creating a Rust project. The before mentioned infrastructure is built when it is compiled to Wasm.
 
@@ -51,9 +46,9 @@ All you need to do is to compile this code as `cargo build --target wasm32-wasi`
 
 # But, what if ... ?
 
-Suppose you have a Wasm binary, but you don't have the source code for this Wasm module, or simply this Wasm module does not come from a standard compilation pipeline like the previously mentioned. It lacks the needed ABI to deal with fastly HTTP services. Thus, you cannot deploy this binary directly to the Compute@Edge service because it is not valid. On the other hand, you rely on the Rust backend to generate Wasm code, and sometimes the generated code does not have the quality that a hand-made Wasm can achieve. (TODO add sentences about performance of hand made for example)
+Suppose you have a Wasm binary, but you don't have the source code for this Wasm module, or simply this Wasm module does not come from a standard compilation pipeline like the previously mentioned. It lacks the needed ABI to deal with fastly HTTP services. Thus, you cannot deploy this binary directly to the Compute@Edge service because it is not valid. On the other hand, you rely on the Rust backend to generate Wasm code, and sometimes the generated code does not have the quality that a hand-made Wasm can achieve.
 
-One way to deal with this problem is to search for the functionality you want to deploy, migrate/implement it to/in Rust, and then integrate the fastly Rust framework. But this is not fun :grin: . The other way is to try to embed the Wasm binary functionality to Rust. To do so, you can use `asm` Macro of Rust to directly write assembly code (depending on the target architecture).
+One way to deal with this problem is to search for the functionality you want to deploy, migrate/implement it to/in Rust, and then include the [fastly Rust crate](https://crates.io/crates/fastly). But this is not fun :grin: . The other way is to try to embed the Wasm binary code in the Rust code. To do so, you can use `asm` macro of Rust to directly write assembly code (depending on the target architecture).
 
 ## Rust inline asm
 
@@ -92,8 +87,6 @@ fn unsafe_wasm() -> i32{
     r
 }
 ```
-
-# TODO explain the code
 
 When we compile the code above to Wasm, we obtain the following code for the `unsafe_wasm` function.
 
@@ -160,7 +153,7 @@ This means that you can declare functions directly with assembly instructions in
 2. Declare the locals used in the Wasm code
 3. Replace the `end` instructions from the WAT code to the respective LLVM S `end` instructions.
     
-    31. We can use the standard algorithm of counting balanced parenthesis, (TODO, explain).
+    31. For example, you can use the naive algorithm of counting balanced parenthesis.
 
 4. Copy the transformed code to the body of the function in the LLVM s format.
 5. Close the function with the `end_function`  instruction.
@@ -218,6 +211,7 @@ extern {
 }
 ```
 
+We have full working example in this [address](https://github.com/Jacarte/fastly4edge).
 
 # Limitations
 
