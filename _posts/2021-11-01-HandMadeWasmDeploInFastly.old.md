@@ -9,25 +9,33 @@ tags: [Rust, WebAssembly, asm, metaprograming]
 comments: true
 ---
 
-# TODO Fastly and the Edge Computing
+# Fastly and the Edge Computing
 
-What is Fastly? What is Edge copmputing ? Benefits of the edge computing, benefits of Wasm over the edge computing.
+Fastly offers a powerful edge cloud services, it brings the tools to provide apps optimized for speed and scale.
+Edge computing is computing that is done at or near the customer requests, and literally this has a geaograhic meaning, instead of relying on the cloud at one of a dozen data centers to do all the work. It doesn’t mean the cloud will disappear. It means the cloud is coming to you. Following the words from Fastly.
 
-Blend with fastly edge computing Rust modules
+> ...is a computation platform capable of running custom binaries that you compile on your own systems and upload to Fastly...
 
-# TODO Rust language and pipeline
+Fastly provides the way to easily decentralize the architecture of your applications.
 
-Benefits, able to compile to Wasm.
 
-Pipeline, boilerplate for generic services, abi injection, fastly API, WASI.
+# Rust
 
-Disection of the generated Wasm binary.
+Fastly is Rust language entusiastic. The applications that you submit to the Compute@Edge service are WebAsembly binaries that run on top of a super performant intepreter implemented in Rust, called Lucet. And, the first support to build, package and deploy your applications is meant for you to implement it in Rust.
 
-# Problem and solution
+Following the official definition of [Rust](https://www.rust-lang.org/)
+> A language empowering everyone to build reliable and efficient software.
 
-Suppose you have Wasm binary, but for this Wasm module, you dont have the original source code or simply this Wasm module does not come from startard compilation pipeline. This means that it probably lacks of the needed aABI to deal with fastly HTTP services, thus, you cannot deploy this binary directly to the Compute@Edge service. By the other hand, you are relying on the Rust backend to generate Wasm code, and sometimes the generated code has not the quality that a hand-made-freeky Wasm can achieve. 
+Rust provides this claim by being memory safe and performant. It supports the compilation of the source code to WebAssembly almost since the release of the Rust's toolchain. To me, this was the main reason why the Fastly  is bidding for WebAssembly as the language to run the applications in the edge.
 
-One way to deal with this problem is to search for the functionality you want to deploy, migrate/implement it to/in Rust and run the standard pipeline. But this is not funny :). The other way is to try to port the Wasm binary functionality to Rust. To do so, you can use the `asm!` macro of Rust to directly write assembly code (depending on the target architecture).
+To run your first hello world in Fastly Edge computing, you can follow this [tutorial](https://developer.fastly.com/learning/compute/). Fastly provides a cli tool to interact with the computing edge service API, being able to create, delete and deploy services. Each service is deployed as a https service. When you deploy with the cli tool, you submit a Wasm binary with an specific structure. I meant specific structure to that the Wasm module needs to provide all the plumping to be able to interact with HTTP calls and the application entrypoint of the service. Fastly provides a Rust crate for HTTP services implementation. Besides, the fastly cli provides the boilerplate for creating a Rust project and when it is compiled to Wasm, all the this infrastructure is built. 
+
+
+# But, what if ... ?
+
+Suppose you have Wasm binary, but for this Wasm module, you dont have the original source code or simply this Wasm module does not come from startard compilation pipeline like the previous mentioned boilerplate. This means that it probably lacks of the needed a ABI to deal with fastly HTTP services, thus, you cannot deploy this binary directly to the Compute@Edge service beacuse it is not valid. By the other hand, you are relying on the Rust backend to generate Wasm code, and sometimes the generated code has not the quality that a hand-made-freeky Wasm can achieve. 
+
+One way to deal with this problem is to search for the functionality you want to deploy, migrate/implement it to/in Rust and run the integrate the fastly Rust framework. But this is not funny :). The other way is to try to port the Wasm binary functionality to Rust. To do so, you can use the `asm!` macro of Rust to directly write assembly code (depending on the target architecture).
 
 ## Rust inline asm
 Rust provides a low-level manipulation macro, [asm](https://doc.rust-lang.org/nightly/unstable-book/library-features/asm.html). This macro allows you to write unsafe code direcly typing asm instructions inside the Rust source code. The following code, shows how to use the macro to inject unsafe assembly instructions.
@@ -53,17 +61,17 @@ The `asm` macro supports to write assembly instruction depending on the target o
 So, in theory the only thing that we need to do is to create a Rust function and then add the body of the wanted Wasm module as unsafe assembly instructions as the following listing illustrates.
 
 ```Rust
-//Rust code
+    //Rust code
 1 : fn unsafe_wasm() -> i32{
-    unsafe{
-2 :   let r:i32;
-      asm!(
-3 :     "i32.const 42", // the meaning of life
-        "local.get {}",
-4 :     out(local) r
-      )
-  }
-5 :  r
+        unsafe{
+    2 :   let r:i32;
+        asm!(
+    3 :     "i32.const 42", // the meaning of life
+            "local.get {}",
+    4 :     out(local) r
+        )
+    }
+    5 :  r
 }
 
 ```
@@ -84,9 +92,9 @@ When we compile the code above to Wasm we obtain the following code.
     i32.sub
     local.set 2
     local.get 2
-    global.set 0
-    i32.const 42
-    local.set 3
+    global.set 0 
+    i32.const 42 ; Here is our code
+    local.set 3  ; -----------------
     local.get 3
     local.set 4
     local.get 2
