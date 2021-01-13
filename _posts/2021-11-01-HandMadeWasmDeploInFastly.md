@@ -77,7 +77,7 @@ The `asm` macro supports to write assembly instructions depending on the target 
 - MIPS32r2 and MIPS64r2
 - wasm32
 
-In theory, the only thing that we need to do is create a Rust function and then add the body of the wanted Wasm module as unsafe assembly instructions, as the following listing illustrates.
+In principle, the only thing that we need to do is create a Rust function and then add the body of the wanted Wasm module as unsafe assembly instructions, as the following listing illustrates.
 
 ```rs
 fn unsafe_wasm() -> i32{
