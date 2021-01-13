@@ -32,7 +32,7 @@ To run your first "hello world" in Fastly Edge computing, you can follow this [t
 
 For example, the following Rust code is all you need to deploy a service in the Compute@Edge service of Fastly.
 
-```Rust
+```rs
 use fastly::http::{HeaderValue, Method, StatusCode};
 use fastly::request::CacheOverride;
 use fastly::{Body, Error, Request, RequestExt, Response, ResponseExt};
@@ -43,8 +43,6 @@ fn main(mut req: Request<Body>) -> Result<impl ResponseExt, Error> {
             .status(StatusCode::OK)
             .body(Body::from(/*Whatever*/))?)
 }
-
-
 ```
 
 All you need to do is to compile this code as `cargo build --target wasm32-wasi`.
@@ -61,8 +59,7 @@ One way to deal with this problem is to search for the functionality you want to
 
 Rust provides a low-level manipulation macro, [asm](https://doc.rust-lang.org/nightly/unstable-book/library-features/asm.html). This macro allows you to write unsafe code directly, typing asm instructions inside the Rust source code. The following code shows how to use the macro to inject unsafe assembly instructions.
 
-```Rust
-// Rust code
+```rs
 unsafe {
     asm!("nop");
 }
@@ -82,20 +79,18 @@ The `asm` macro supports to write assembly instruction depending on the target o
 
 In theory, the only thing that we need to do is create a Rust function and then add the body of the wanted Wasm module as unsafe assembly instructions, as the following listing illustrates.
 
-```Rust
-    //Rust code
-1 : fn unsafe_wasm() -> i32{
-        unsafe{
-    2 :   let r:i32;
+```rs
+fn unsafe_wasm() -> i32{
+    unsafe{
+        let r:i32;
         asm!(
-    3 :     "i32.const 42", // the meaning of life
-            "local.get {}",
-    4 :     out(local) r
+         "i32.const 42", // the meaning of life
+         "local.get {}",
+         out(local) r
         )
     }
-    5 :  r
+    r
 }
-
 ```
 
 # TODO explain the code
@@ -143,17 +138,16 @@ We inserted 2 instructions; however, the generated code contains 29. This result
 
 [This RFC](https://rust-lang.github.io/rfcs/1548-global-asm.html) exposes LLVM's support for module-level inline assembly by adding a `global_asm!` macro. 
 
-```Rust
+```rs
 global_asm!(r#"
-.globl my_asm_func
-my_asm_func:
-    
+    .globl my_asm_func
+    my_asm_func:
+        ...
 "#);
 
 extern {
     fn my_asm_func();
 }
-
 ```
 The official documentation describes the motivation for this macro as follows.
 > There are two main use cases for this feature. The first is that it allows functions to be written completely in assembly, which mostly eliminates the need for a naked attribute. This is mainly useful for function that use a custom calling convention, such as interrupt handlers.
@@ -194,7 +188,7 @@ This code is injected in the compiled service Wasm exactly as it is written befo
 
 Lets put all together in our new service. 
 
-```Rust
+```rs
 #![feature(asm)]
 #![feature(global_asm)]
 
@@ -222,7 +216,6 @@ global_asm!(r#"
 extern {
     fn life() -> i32;
 }
-
 ```
 
 
