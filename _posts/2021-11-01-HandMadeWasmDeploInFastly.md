@@ -213,6 +213,6 @@ extern {
 
 We have full working example in this [address](https://github.com/Jacarte/fastly4edge).
 
-# Limitations
+## Using dynamic linking during rustc compiling
 
-We are able to run any custom Wasm code in a Fastly service package. But, what if the injected code involves memory operations ? This solution does not scale if we are not taking into account how the service interact with its own memory. In a next post we will propose a solution for it.
+TODO
