@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 
-<title>Javier  Cabrera Arteaga | blank</title>
+<title>Javier  Cabrera Arteaga | Supervision and Teaching</title>
 <meta name="description" content="Personal blog
 ">
 
@@ -25,7 +25,7 @@
 <link re="stylesheet" href="https://pygments.org/_static/pygments14.css">
 <link re="stylesheet" href="https://pygments.org/_static/pygments.css">
 
-<link rel="canonical" href="/blog/">
+<link rel="canonical" href="/teaching/">
 
 <!-- Open Graph -->
 
@@ -64,7 +64,7 @@
           </li>
           
           <!-- Blog -->
-          <li class="nav-item active">
+          <li class="nav-item ">
             <a class="nav-link" href="/blog/">
               Blog
               
@@ -99,9 +99,11 @@
           
           
           
-          <li class="nav-item ">
+          <li class="nav-item active">
               <a class="nav-link" href="/teaching/">
                 Supervision and Teaching
+                
+                <span class="sr-only">(current)</span>
                 
               </a>
           </li>
@@ -126,54 +128,61 @@
     <div class="container mt-5">
       <div class="post">
 
-  <div class="header-bar">
-    <h1>Some thoughts</h1>
-    <h2>Some thoughts and ideas of mine</h2>
-  </div>
+  <header class="post-header">
+    <h1 class="post-title">Supervision and Teaching</h1>
+    <p class="post-description"></p>
+  </header>
 
+  <article>
+    <h3 class="year">2021</h3>
 
-  <ul class="post-list">
-    
-      <li>
-        <h3><a class="post-title" href="/blog/2021/HandMadeWasmDeploInFastly/">How to deploy hand made Wasm code in Fastly Compute@Edge (Work in progress).</a></h3>
-        <p class="post-meta">January 11, 2021</p>
-        <p>How to deploy your first Fastly's Compute@Edge service ? How to deploy custom Wasm to it ? ... and a little bit of metaprogramming with Rust.</p>
-      </li>
-    
-      <li>
-        <h3><a class="post-title" href="/blog/2020/SurveyOnFuzzing/">Fuzzing Survey.</a></h3>
-        <p class="post-meta">September 17, 2020</p>
-        <p>Fuzzing is an automated technique for software testing. I will try to put in this blog entry some of the basics ideas about fuzzing, as well as pros and cons of some fuzzers and techniques to face specific issues.</p>
-      </li>
-    
-      <li>
-        <h3><a class="post-title" href="/blog/2019/NonIntrusiveJSFunctionCoverage/">A non intrusive JS code analysis.</a></h3>
-        <p class="post-meta">March 21, 2019</p>
-        <p>Making a function coverage tool for JS using Graal-JS source code modification.</p>
-      </li>
-    
-  </ul>
+<ul>
+  <li>
+    <p>Master thesis supervision: Adam Benali: Neural Decompilation for WebAssembly.</p>
 
-  
-<nav aria-label="Blog page naviation">
-  <ul class="pagination pagination-lg justify-content-center">
-    <li class="page-item disabled">
-      <a class="page-link" href="" tabindex="-1" aria-disabled="">Newer</a>
-    </li>
-    
-      
-        <li class="page-item active"><a class="page-link" href="/blog/index.html" title="blank">1</a></li>
-      
-        <li class="page-item "><a class="page-link" href="/blog/page/2/index.html" title="blank - page 2">2</a></li>
-      
-    
-    <li class="page-item ">
-      <a class="page-link" href="/blog/page/2/">Older</a>
-    </li>
-  </ul>
-</nav>
+    <p><em>WebAssembly is a new low-level language used as a compilation target which runs in web browsers. There are many benefits to using WebAssembly, mainly the speed gain compared to Javascript while still being able to run it in the same sandbox Javascript code runs in. Decompilation is the process of taking compiled binary code and producing textual source code that is equivalent to the original source code. However, it does not have to be identical to the latter. Decompiling a program to source code that is very faithful to the original source code is a hard task because a lot of the information about the source code is destroyed by compilers as they do various optimizations. Because of this, neural approaches for decompilation attempting to solve this problem have been studied. To expand on the latter, machine learning for source code is a new area of research where ML is being leveraged to handle large sizes of soure code, assist in code generation and source code translation. The above are the three main themes which are in the scope of this degree project.</em></p>
 
+    <p><em>WebAssembly is a compiled language, but for conducting security analyses for example, binary code is not the ideal format to deal with. Hence, decompilation is an essential step when working with WASM. However, it is challenging to write an accurate decompiler (that can always reconstruct the source code that actually corresponds to the compiled code) and the implementation of decompilers currently relies on the careful, manual design of decompilation rules. Some recent works have proposed to use machine learning in order to train a decompiler. These works successfully applied this concept to decompile from x86 to C source code. Therefore, in this thesis, the goal will be to study decompilation learning for WebAssembly.</em></p>
+  </li>
+  <li>
+    <p>Teacher Assistant in <a href="https://www.kth.se/social/course/DD1369/">DD1369</a> Programvarukonstruktion i projektform.</p>
+  </li>
+  <li>
+    <p>Teacher Assinstant in <a href="https://www.kth.se/student/kurser/kurs/DD2525?l=en">DD2525</a> Language Based Security</p>
+  </li>
+</ul>
 
+<h3 class="year">2020</h3>
+
+<ul>
+  <li>
+    <p>Master thesis supervision: Camille Fournier: <a href="http://www.csc.kth.se/~ann/MSC-PRESENTATIONS/2020/0703-Baudry.html">Comparison of Smoothness in Progressive Web Apps and Mobile Applications on Android</a>.</p>
+
+    <p><em>One of the main challenges of mobile development lies in the high fragmentation of mobile platforms. Developers often need to develop the same application several times for all targeted platforms, raising the cost of development and maintenance. One solution to this problem is cross-platform development, which traditionally only includes mobile applications. However, a new approach introduced by Google in 2015 also includes web applications. Progressive Web Apps, as they are called, are web applications that can be installed on mobile and behave like mobile applications. This research aims at studying and comparing their performance to mobile applications on Android, especially in terms of smoothness, memory and CPU usage. To that end, we analyzed the Rendering pipeline of Android and Chrome and deducted a smoothness metric. Then, a Progressive Web App, a Native Android and a React Native Interpreted Application were developed and their performance measured in several scenarios. The results imply that Progressive Web Applications, though they have great benefits, are not as smooth as Mobile applications on Android. Their memory performance and CPU usage lag behind Native Applications, but are similar to Interpreted applications.</em></p>
+  </li>
+  <li>
+    <p>Teacher Assistant in <a href="https://www.kth.se/student/kurser/kurs/DD2525">DD2525</a> Language-based security at KTH.</p>
+  </li>
+</ul>
+
+<h3 class="year">2019</h3>
+
+<ul>
+  <li>
+    <p>Teacher Assistant in <a href="https://www.kth.se/student/kurser/kurs/DD1393">DD1393</a> mvk Introduction to Software Engineering at KTH.</p>
+  </li>
+  <li>
+    <p>Teacher Assinstant in <a href="https://www.kth.se/student/kurser/kurs/DD2525?l=en">DD2525</a> Language Based Security</p>
+  </li>
+</ul>
+
+<h3 class="year">2017</h3>
+
+<ul>
+  <li>Assistant professor in Compiling and Language Theory at University of Havana.</li>
+</ul>
+
+  </article>
 
 </div>
 
