@@ -82,6 +82,7 @@ collections:
       layout: post
     output: true
     permalink: /news/:path/
+
   projects:
     output: true
     permalink: /projects/:path/
@@ -129,7 +130,7 @@ plugins:
 
 scholar:
 
-  last_name: Einstein
+  last_name: Cabrera
 
   style: apa
   locale: en

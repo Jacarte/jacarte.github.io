@@ -1,7 +1,7 @@
 ---
 layout: page
 permalink: /courses/
-title: courses
+title: Courses
 description: Passed courses.
 nav: true
 ---
