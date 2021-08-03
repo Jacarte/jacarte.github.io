@@ -22,6 +22,14 @@ I am a PhD student at KTH Royal Institute of Technology, more specifically, I am
 
 <img style="max-width: 400px" src="assets/img/BOBE.gif"/>
 
+<h2>Some news</h2>
+<div class="collab">
+  <ul>
+    <li><strong>May 21, 2021</strong> We are collaborating with <a href="https://www.fastly.com/">Fastly</a> for sake of researching and security. Our research is focusing in diversification and randomization for WebAssembly. We recently received the credits for a <a href="https://www.fastly.com/blog/defense-in-depth-stopping-a-wasm-compiler-bug-before-it-became-a-problem">CVE discovered</a> in the Wasm Lucet compiler. </li>
+  </ul>
+</div>
+
+
 <h2>Publications</h2>
 <div class="publications">
 
@@ -31,7 +39,7 @@ I am a PhD student at KTH Royal Institute of Technology, more specifically, I am
 {% endfor %}
 
 
-<h2>Presentations</h2>
+<h2>Slides</h2>
 <div class="publications">
 
 <ul>

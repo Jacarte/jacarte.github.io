@@ -1,6 +1,6 @@
 ---
 layout: post
-title: How to deploy hand made Wasm code in Fastly Compute@Edge (Work in progress).
+title: How to deploy hand made Wasm code in Fastly Compute@Edge.
 date: 2021-01-11 13:32:20 +0300
 description: How to deploy your first Fastly's Compute@Edge service ? How to deploy custom Wasm to it ? ... and a little bit of metaprogramming with Rust.
 
@@ -210,9 +210,3 @@ extern {
     fn life() -> i32;
 }
 ```
-
-We have full working example in this [address](https://github.com/Jacarte/fastly4edge).
-
-## Using dynamic linking during rustc compiling
-
-TODO
