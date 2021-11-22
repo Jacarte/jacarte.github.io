@@ -8,6 +8,11 @@ nav: true
 
 
 
+<h3 class="year">2021</h3>
+
+- Cyber-physical systems' safety and security [FMF3032](https://www.kth.se/student/kurser/kurs/FMF3032?l=en)
+
+
 <h3 class="year">2020</h3>
 
 - Introduction to High Performance Computing [FDD3258](https://www.kth.se/student/kurser/kurs/FDD3258?l=en)
@@ -18,5 +23,5 @@ nav: true
 - Advanced Ethical Hacking [FEP3370](https://www.kth.se/student/kurser/kurs/FEP3370?l=en)
 - Critical Perspectives on Data Science and Machine Learning [FDT3303](https://www.kth.se/student/kurser/kurs/FDT3303?l=en)
 - Basic Communication and Teaching [FLH3000](https://www.kth.se/student/kurser/kurs/FLH3000?l=en)
-- [Course on Modeling & Solving Combinatorial Problems with MiniZinc
+- (Credited) [Course on Modeling & Solving Combinatorial Problems with MiniZinc
 ](https://www.castor.kth.se/event/phd-course-on-modeling-solving-combinatorial-problems-with-minizinc/)
