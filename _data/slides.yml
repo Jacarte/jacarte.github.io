@@ -1,7 +1,7 @@
 - name: Code randomization for WebAssembly
   url: https://docs.google.com/presentation/d/1M5qFN-TZisJlkxeNLHViV9bLCwoRFOmLI0KGrl04NRo/edit?usp=sharing
 - name: WebAssembly vulnerabilities, old is new again
-  url: https://www.jacarte.net/wasm_presentation/
+  url: https://www.jacarte.me/wasm_presentation/
 - name: Superoptimization of WebAssembly bytecode
   url: https://docs.google.com/presentation/d/14KWJy_hjh-jWSgRZyrtjYujWHHFuYkFtfYDaLTymXIw/edit?usp=sharing
 - name: STRAC
