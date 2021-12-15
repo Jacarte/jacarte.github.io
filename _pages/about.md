@@ -22,7 +22,10 @@ I am a PhD student at KTH Royal Institute of Technology, more specifically, I am
 
 <img style="max-width: 400px" src="assets/img/BOBE.gif"/>
 
-<h2>Some news</h2>
+<h2>Lazy town</h2>
+<p>An <a>experiment</a> reproduction for MINOS</p>
+
+<h2>Some highlightings</h2>
 <div class="collab">
   <ul>
     <li><strong>September-December, 2021</strong> Industrial Internship at Fastly </li>
