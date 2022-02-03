@@ -46,7 +46,7 @@ I am a PhD student at KTH Royal Institute of Technology, more specifically, I am
           <abbr class="badge">WIP</abbr>
         </div>
         <div id="breaking" class="col-sm-8">
-          <div class="title"><a target="_blank" >Data augmentation to break WebAssembly classifiers</a></div>
+          <div class="title"><a target="_blank" href="assets/pdf/FID3214.pdf">Data augmentation to break WebAssembly classifiers</a></div>
           <div class="author">
                       Cabrera Arteaga, Javier
           </div>
@@ -58,7 +58,18 @@ I am a PhD student at KTH Royal Institute of Technology, more specifically, I am
         <!-- Hidden abstract block -->
         
         <div class="abstract hidden">
-          <p>WIP
+          <p>In this work we proposed a data augmentation
+              technique using a novel mutation tool for WebAssembly that
+              provides semantically equivalent code transformations. We re-
+              produce MINOS, a novel tool to automatically detect malicious
+              WebAssembly programs. We empirically demonstrate that the
+              original dataset of MINOS is too small to be generalized.
+              The MINOS model trained with the original dataset dropped
+              its accuracy to 50% on the augmented datasets. Besides, the
+              model does not improve when it uses the augmented dataset
+              for training. Thus, we show that the proposed normalization
+              process in MINOS is affected under depth data transformations
+              for WebAssembly.
           </p>
         </div>
         
