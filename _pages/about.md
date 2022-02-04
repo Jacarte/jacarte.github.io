@@ -35,7 +35,7 @@ I am a PhD student at KTH Royal Institute of Technology, more specifically, I am
   </ul>
 </div>
 
-<h2>Work in progress</h2>
+<h2>Proofs of concept and ongoing works</h2>
   <div class="publications">
   <h3 class="year">2022</h3>
   
@@ -43,7 +43,7 @@ I am a PhD student at KTH Royal Institute of Technology, more specifically, I am
     <li>
       <div class="row">
         <div class="col-sm-2 abbr">
-          <abbr class="badge">WIP</abbr>
+
         </div>
         <div id="breaking" class="col-sm-8">
           <div class="title"><a target="_blank" href="assets/pdf/FID3214.pdf">Data augmentation to break WebAssembly classifiers</a></div>

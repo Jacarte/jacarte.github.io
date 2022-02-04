@@ -10,6 +10,8 @@ nav: true
 
 <h3 class="year">2021</h3>
 
+- Programming for Data Science [FID3214](https://www.kth.se/student/kurser/kurs/FID3214)
+
 - Cyber-physical systems' safety and security [FMF3032](https://www.kth.se/student/kurser/kurs/FMF3032?l=en)
 
 
