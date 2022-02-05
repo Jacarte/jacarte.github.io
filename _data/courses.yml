@@ -1,0 +1,15 @@
+- name: Programming for Data Science
+  code: FID3214
+  url: https://www.kth.se/student/kurser/kurs/FID3214
+- name: Cyber-physical systems' safety and security
+  code: FID3214
+  url: https://www.kth.se/student/kurser/kurs/FMF3032?l=en
+- name: Research preparation course in programming languages and formal methods
+  code: FMF3032
+  url: https://www.kth.se/student/kurser/kurs/FDD3024?l=en
+- name: Advanced Ethical Hacking
+  code: FEP3370
+  url: https://www.kth.se/student/kurser/kurs/FEP3370?l=en
+- name: Modeling & Solving Combinatorial Problems with MiniZinc
+  code: _
+  url: https://www.castor.kth.se/event/phd-course-on-modeling-solving-combinatorial-problems-with-minizinc/

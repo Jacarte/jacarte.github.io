@@ -18,12 +18,15 @@ social: true  # includes social icons at the bottom of the page
 years: [2021, 2020, 2019]
 ---
 
-I am a PhD student at KTH Royal Institute of Technology, more specifically, I am doing Software Randomization for Security. I am a team member of the Trustworthy Fullstack Computing (<a href="https://www.trustfull.proj.kth.se/">TRUSTFULL</a>) project.
+I am a PhD student at KTH Royal Institute of Technology since 2019, more
+specifically, I do Software Randomization for Security. I am a team member of
+the Trustworthy Fullstack Computing (<a
+href="https://www.trustfull.proj.kth.se/">TRUSTFULL</a>) project.
 
 <img style="max-width: 400px" src="assets/img/BOBE.gif"/>
 
 
-<h2>Some highlightings</h2>
+<h2>Logs</h2>
 <div class="collab">
   <ul>
     <li><strong>September-December, 2021</strong> Contractor Software Engineer at Fastly </li>
@@ -88,13 +91,45 @@ I am a PhD student at KTH Royal Institute of Technology, more specifically, I am
 {% endfor %}
 
 
-<h2>Slides</h2>
+<h2>Courses highlighting</h2>
+<div class="publications">
+
+<ul>
+
+  {% for s in site.data.courses %}
+    <li><a href="{{s.url}}" target="_blank"><strong>{{s.code}} </strong>{{s.name}}</a></li>
+  {% endfor %}
+
+</ul>
+
+</div>
+
+<h2>Some slides</h2>
 <div class="publications">
 
 <ul>
 
   {% for s in site.data.slides %}
     <li><a href="{{s.url}}" target="_blank">{{s.name}}</a></li>
+  {% endfor %}
+
+</ul>
+
+</div>
+
+<h2>Master theses supervision</h2>
+<div class="publications">
+
+<ul>
+
+  {% for s in site.data.theses %}
+    <li>
+      <div>
+        <a href="{{s.url}}" target="_blank"><strong>{{s.student}}: </strong>{{s.name}}</a>
+        <p>{{s.abstract}}</p>
+      </div>
+      
+      </li>
   {% endfor %}
 
 </ul>

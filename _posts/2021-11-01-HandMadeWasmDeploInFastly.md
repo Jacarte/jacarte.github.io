@@ -42,8 +42,6 @@ fn main(mut req: Request<Body>) -> Result<impl ResponseExt, Error> {
 
 All you need to do is to compile this code as `cargo build --target wasm32-wasi`.
 
-## TODO few sentences about WASI and how the service works, entrypoint, request, response etc.
-
 # But, what if ... ?
 
 Suppose you have a Wasm binary, but you don't have the source code for this Wasm module, or simply this Wasm module does not come from a standard compilation pipeline like the previously mentioned. It lacks the needed ABI to deal with fastly HTTP services. Thus, you cannot deploy this binary directly to the Compute@Edge service because it is not valid. On the other hand, you rely on the Rust backend to generate Wasm code, and sometimes the generated code does not have the quality that a hand-made Wasm can achieve.
