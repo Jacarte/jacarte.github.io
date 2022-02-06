@@ -6,5 +6,7 @@ description: >
 img: 
 importance: 0
 redirect: https://github.com/bytecodealliance/wasm-tools/tree/main/crates/wasm-mutate
+github: https://github.com/bytecodealliance/wasm-tools/tree/main/crates/wasm-mutate
+github_stars: 351
 ---
 

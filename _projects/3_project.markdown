@@ -7,5 +7,7 @@ description: >
 img: 
 importance: 1
 redirect: https://github.com/KTH/souper/tree/parallel
+github: https://github.com/KTH/souper/tree/parallel
+github_forked: 40
 ---
 

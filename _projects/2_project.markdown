@@ -7,5 +7,7 @@ description: >
 img: 
 importance: 1
 redirect: https://github.com/KTH/STRAC
+github: https://github.com/KTH/STRAC
+github_stars: 4
 ---
 

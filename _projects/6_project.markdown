@@ -7,5 +7,6 @@ description: >
 img: 
 importance: 1
 redirect: https://github.com/Jacarte/ITBot
+github: https://github.com/Jacarte/ITBot
 ---
 

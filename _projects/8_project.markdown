@@ -6,5 +6,7 @@ description: >
 img: 
 importance: 1
 redirect: https://github.com/Jacarte/tiger-graal
+github: https://github.com/Jacarte/tiger-graal
+github_stars: 1
 ---
 

@@ -7,5 +7,7 @@ description: >
 img: 
 importance: 1
 redirect: https://github.com/KTH/slumps/tree/master/wasm-fuzzer
+github: https://github.com/KTH/slumps/tree/master/wasm-fuzzer
+github_stars: 40
 ---
 

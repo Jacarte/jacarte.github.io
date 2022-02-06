@@ -7,5 +7,7 @@ description: >
 img: 
 importance: 1
 redirect: https://github.com/KTH/L3-37-Browser
+github: https://github.com/KTH/L3-37-Browser
+github_stars: 6
 ---
 

@@ -17,14 +17,25 @@ selected_papers: true # includes a list of papers marked as "selected={true}"
 social: true  # includes social icons at the bottom of the page
 years: [2021, 2020, 2019]
 ---
+ <h2>About me</h2>
 
 I am a PhD student at KTH Royal Institute of Technology since 2019, more
 specifically, I do Software Randomization for Security. I am a team member of
 the Trustworthy Fullstack Computing (<a
 href="https://www.trustfull.proj.kth.se/">TRUSTFULL</a>) project.
 
-<img style="max-width: 400px" src="assets/img/BOBE.gif"/>
+<!-- <img style="max-width: 400px" src="assets/img/BOBE.gif"/>
+ -->
+ <h2>My GitHub</h2>
+ stats generated with <a href="https://github.com/jacarte/github-stats">https://github.com/jacarte/github-stats</a>
 
+![overview](https://raw.githubusercontent.com/Jacarte/github-stats/master/generated/overview.svg)
+
+![languages](https://raw.githubusercontent.com/Jacarte/github-stats/master/generated/languages_count.svg)
+
+ <h3>Achievements</h3>
+  <a href="https://archiveprogram.github.com/"> Arctic Code Vault Contributor <img alt="Arctic Code Vault Contributor" src="https://github.githubassets.com/images/modules/profile/badge--acv-64.png" width="64px">
+</a>
 
 <h2>Logs</h2>
 <div class="collab">
