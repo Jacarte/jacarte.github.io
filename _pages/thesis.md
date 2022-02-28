@@ -3,7 +3,7 @@ layout: page
 permalink: /thesis/
 title: Thesis
 description: 
-nav: true
+nav: false
 ---
 
 
