@@ -60,7 +60,7 @@ href="https://www.trustfull.proj.kth.se/">TRUSTFULL</a>) project.
 
         </div>
         <div id="breaking" class="col-sm-8">
-          <div class="title">Wasm-mutate: Fuzzing WebAssembly Compilers with E-Graphs<a target="_blank" href="assets/pdf/wasm_mutate.pdf"></a></div>
+          <div class="title"><a target="_blank" href="assets/pdf/wasm_mutate.pdf">Wasm-mutate: Fuzzing WebAssembly Compilers with E-Graphs</a></div>
           <div class="author">
                       Cabrera Arteaga, Javier
           </div>
