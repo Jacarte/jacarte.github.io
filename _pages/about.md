@@ -36,7 +36,7 @@ href="https://www.trustfull.proj.kth.se/">TRUSTFULL</a>) project.
  <h3>Achievements</h3>
   <a href="https://archiveprogram.github.com/"> Arctic Code Vault Contributor <img alt="Arctic Code Vault Contributor" src="https://github.githubassets.com/images/modules/profile/badge--acv-64.png" width="64px">
   <br/>
-  <a href="https://github.com/bytecodealliance/governance/blob/main/recognized-contributors.md"> Bytecode Alliance Contributor <img width="50" src="https://webassembly.org/css/webassembly.svg"/></a>
+  <a href="https://github.com/bytecodealliance/governance/blob/main/recognized-contributors.md"> Bytecode Alliance Contributor <img width="120" src="https://bytecodealliance.org/images/bytecode-alliance-logo.svg"/></a>
 </a>
 
 <h2>Logs</h2>
@@ -63,11 +63,9 @@ href="https://www.trustfull.proj.kth.se/">TRUSTFULL</a>) project.
       <div class="row">
         <div class="col-sm-2 abbr">
 
+            <abbr class="badge">EGRAPHS 2022</abbr>
         </div>
         <div id="breaking" class="col-sm-8">
-          <div class="col-sm-2 abbr">
-            <abbr class="badge">EGRAPHS 2022</abbr>
-          </div>
           <div class="title"><a target="_blank" href="assets/pdf/wasm_mutate.pdf">Wasm-mutate: Fuzzing WebAssembly Compilers with E-Graphs</a></div>
           <div class="author">
                       Cabrera Arteaga, Javier
