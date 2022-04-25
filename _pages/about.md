@@ -35,6 +35,7 @@ href="https://www.trustfull.proj.kth.se/">TRUSTFULL</a>) project.
 
  <h3>Achievements</h3>
   <a href="https://archiveprogram.github.com/"> Arctic Code Vault Contributor <img alt="Arctic Code Vault Contributor" src="https://github.githubassets.com/images/modules/profile/badge--acv-64.png" width="64px">
+  <a href="https://github.com/bytecodealliance/governance/blob/main/recognized-contributors.md"> Bytecode Alliance Contributor <img src="https://webassembly.org/css/webassembly.svg"/></a>
 </a>
 
 <h2>Logs</h2>
