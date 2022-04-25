@@ -65,6 +65,9 @@ href="https://www.trustfull.proj.kth.se/">TRUSTFULL</a>) project.
 
         </div>
         <div id="breaking" class="col-sm-8">
+          <div class="col-sm-2 abbr">
+            <abbr class="badge">EGRAPHS 2022</abbr>
+          </div>
           <div class="title"><a target="_blank" href="assets/pdf/wasm_mutate.pdf">Wasm-mutate: Fuzzing WebAssembly Compilers with E-Graphs</a></div>
           <div class="author">
                       Cabrera Arteaga, Javier
@@ -82,7 +85,6 @@ href="https://www.trustfull.proj.kth.se/">TRUSTFULL</a>) project.
     <li>
       <div class="row">
         <div class="col-sm-2 abbr">
-          <abbr class="badge">EGRAPHS 2022, PLDI</abbr>
         </div>
         <div id="breaking" class="col-sm-8">
           <div class="title"><a target="_blank" href="assets/pdf/FID3214.pdf">Data augmentation to break WebAssembly classifiers</a></div>
