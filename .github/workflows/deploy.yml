@@ -13,6 +13,7 @@ jobs:
         username: jacarte
         password: ${{  secrets.DOCKER_CONTAINER_REGISTRY_TOKEN }}
     steps:
+      # Add the building of the CV here as well
       - uses: actions/checkout@v2
       - name: Deploy document
         run: |
@@ -20,7 +21,8 @@ jobs:
           git config --global user.email "xppcoder@gmail.com"
           git config --global user.name "jacarte"
           git config --global credential.helper cache
-
+          git config --global --add safe.directory /__w/jacarte.github.io/jacarte.github.io
+          
           echo "en_US UTF-8" > /etc/locale.gen
           locale-gen en_US.UTF-8
           export LANG=en_US.UTF-8
