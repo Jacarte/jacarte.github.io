@@ -1,0 +1,32 @@
+name: Deploy page
+# This workflow is triggered on pushes to the repository.
+on: [push]
+
+jobs:
+  build:
+    name: Build document
+    # This job runs on Linux
+    runs-on: ubuntu-20.04
+    container:
+      image: ghcr.io/jacarte/latex-build:latest14
+      credentials:
+        username: jacarte
+        password: ${{  secrets.DOCKER_CONTAINER_REGISTRY_TOKEN }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Deploy document
+        run: |
+          
+          git config --global user.email "xppcoder@gmail.com"
+          git config --global user.name "jacarte"
+          git config --global credential.helper cache
+
+          echo "en_US UTF-8" > /etc/locale.gen
+          locale-gen en_US.UTF-8
+          export LANG=en_US.UTF-8
+          export LANGUAGE=en_US:en
+          export LC_ALL=en_US.UTF-8
+
+          bash ./bin/deploy_auto 
+        env:
+          REPO_KEY: '${{ secrets.REPO_KEY2 }}'
