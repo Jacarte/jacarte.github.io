@@ -9,26 +9,23 @@ nav: false
 
 <ul>
     <li>
-        <a href="/assets/pdf/thesis/chapterintro.pdf">Cover</a>
+        <a href="/assets/pdf/thesis/chapter_1.pdf">Chapter 1: Introduction</a>
     </li>
     <li>
-        <a href="/assets/pdf/thesis/chapter1.pdf">Chapter 1</a>
+        <a href="/assets/pdf/thesis/chapter_2.pdf">Chapter 2: Background and State of the Art</a>
     </li>
     <li>
-        <a href="/assets/pdf/thesis/chapter2.pdf">Chapter 2</a>
+        <a href="/assets/pdf/thesis/chapter_3.pdf">Chapter 3: Technical contributions</a>
     </li>
     <li>
-        <a href="/assets/pdf/thesis/chapter3.pdf">Chapter 3</a>
+        <a href="/assets/pdf/thesis/chapter_4.pdf">Chapter 4: Methodology</a>
     </li>
     <li>
-        <a href="/assets/pdf/thesis/chapter4.pdf">Chapter 4</a>
-    </li>
-    <li>
-        <a href="/assets/pdf/thesis/chapter5.pdf">Chapter 5</a>
+        <a href="/assets/pdf/thesis/chapter_5.pdf">Chapter 5: Results</a>
     </li>
 
     <li>
-        <a href="/assets/pdf/thesis/chapter6.pdf">Chapter 6</a>
+        <a href="/assets/pdf/thesis/chapter_6.pdf">Chapter 6: Conclusions</a>
     </li>
 </ul>
 
