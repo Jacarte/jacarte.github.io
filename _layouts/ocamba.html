@@ -72,7 +72,7 @@
                 let now = new Date();
                 let timeSpan = eventDay - now;
 
-                if (timeSpan <= -today) {
+                if (timeSpan <= -now) {
                     console.log("Unfortunately we have past the event day");
                     clearInterval(interval);
                 }
