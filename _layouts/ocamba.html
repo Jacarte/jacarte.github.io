@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Ocamba season</title>
+        <style>
+            *{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            }
+
+            body{
+            font-family: 'Poppins', sans-serif;
+            height: 100vh;
+            width: 100%;
+            background: rgb(175, 90, 90);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            }
+
+            .date-countdown-container{
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            }
+
+            .date-countdown-container h2{
+            background-color: #ddd;
+            padding: 20px;
+            border-radius: 10px;
+            border: 5px solid #fff;
+            -webkit-box-shadow: 8px 0px 0px 0px #DCD0C0, 0px 8px 0px 0px #B1938B, -8px 0px 0px 0px #4E4E56, 0px 0px 0px 8px #DA635D, 5px 5px 15px 5px rgba(0,0,0,0); 
+            box-shadow: 8px 0px 0px 0px #DCD0C0, 0px 8px 0px 0px #B1938B, -8px 0px 0px 0px #4E4E56, 0px 0px 0px 8px #DA635D, 5px 5px 15px 5px rgba(0,0,0,0);
+            }
+
+            .date-countdown-container p{
+            background-color: #ddd;
+            padding: 2px;
+            border-radius: 10px;
+            border: 2px solid #fff;
+            -webkit-box-shadow: 8px 0px 0px 0px #DCD0C0, 0px 8px 0px 0px #B1938B, -8px 0px 0px 0px #4E4E56, 0px 0px 0px 8px #DA635D, 5px 5px 15px 5px rgba(0,0,0,0); 
+            box-shadow: 8px 0px 0px 0px #DCD0C0, 0px 8px 0px 0px #B1938B, -8px 0px 0px 0px #4E4E56, 0px 0px 0px 8px #DA635D, 5px 5px 15px 5px rgba(0,0,0,0);
+            }
+        </style>
+	</head>
+	<body>
+		<div class="date-countdown-container">
+            <h1>Temporada de Ocambas</h1>
+			<h2 id="day">0</h2>
+			<p>:</p>
+			<h2 id="hour">0</h2>
+			<p>:</p>
+			<h2 id="minute">0</h2>
+			<p>:</p>
+			<h2 id="second">0</h2>
+		</div>
+		<script>
+            let interval;
+            const eventDay = new Date('01/06/2022');
+
+            const second = 1000;
+            const minute = second * 60;
+            const hour = minute * 60;
+            const day = hour * 24;
+
+            const countDownFn = () => {
+                // All logic goes in
+                let now = new Date();
+                let timeSpan = eventDay - now;
+
+                if (timeSpan <= -today) {
+                    console.log("Unfortunately we have past the event day");
+                    clearInterval(interval);
+                }
+                else {
+                    const days = Math.floor(timeSpan / day)
+                    const hours = Math.floor((timeSpan % day) / hour)
+                    const minutes = Math.floor((timeSpan % hour) / minute)
+                    const seconds = Math.floor((timeSpan % minute) / second)
+                
+                    let dayField = document.getElementById('day');
+                    let hourField = document.getElementById('hour');
+                    let minuteField = document.getElementById('minute');
+                    let secondField = document.getElementById('second');
+
+                    // Set results
+                    dayField.innerHTML = days;
+                    hourField.innerHTML = hours;
+                    minuteField.innerHTML = minutes;
+                    secondField.innerHTML = seconds;
+
+                    console.log(days + ":" + hours + ":" + minutes + ":" + seconds);
+                }
+            }
+
+            everySecond = setInterval(countDownFn, second)
+            everyMinute = setInterval(countDownFn, minute)
+            everyHour = setInterval(countDownFn, hour)
+        </script>
+	</body>
+</html>
