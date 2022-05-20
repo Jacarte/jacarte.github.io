@@ -14,14 +14,17 @@
 
             body{
             font-family: 'Poppins', sans-serif;
-            height: 80vh;
+            height: 100vh;
             width: 100%;
             background: rgb(175, 90, 90);
+            }
+
+            #container{
             display: flex;
             justify-content: center;
             align-items: center;
             }
-
+            
             .date-countdown-container{
             display: flex;
             align-items: center;
@@ -49,14 +52,16 @@
 	</head>
 	<body>
         <h1>Temporada de Ocambas</h1>
-		<div class="date-countdown-container">
-			<h2 id="day">0</h2>
-			<p> dias :</p>
-			<h2 id="hour">0</h2>
-			<p>horas :</p>
-			<h2 id="minute">0</h2>
-			<p>minutos</p>
-		</div>
+        <div id="container">
+            <div class="date-countdown-container">
+                <h2 id="day">0</h2>
+                <p> dias :</p>
+                <h3 id="hour">0</h3>
+                <p>horas :</p>
+                <h3 id="minute">0</h3>
+                <p>minutos</p>
+            </div>
+        </div>
 		<script>
             let interval;
             const eventDay = new Date('06/01/2022');
