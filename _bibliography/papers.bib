@@ -25,7 +25,7 @@ We present STRAC, a scalable and extensible tool tailored to compare bytecode tr
 @inproceedings{TODO,
     author = {Cabrera Arteaga, Javier and Laperdriex, Pierre and Monperrus, Martin and Baudry, Benoit},
     title = {Multi-Variant Execution at the Edge},
-    year = {2021},
+    year = {2022},
     abbr={Accepted MTD 2022},
     isbn = {TODO},
     publisher = {MTD 2022},
@@ -36,7 +36,7 @@ We present STRAC, a scalable and extensible tool tailored to compare bytecode tr
 
 In this context, we propose a technique that (i) automatically diversifies WebAssembly binaries that are deployed to the edge and (ii) randomizes execution paths at runtime, turning the execution of the services into a moving target. Given a service to be deployed at the edge, we automatically synthesize functionally equivalent variants for the functions that implement the service. All the variants are then wrapped into a single multivariant WebAssembly binary. When the service endpoint is executed, every time a function is invoked, one of its variants is randomly selected. We implement this technique in the MEWE tool and we validate it with 7 services for cryptography and QR encoding. MEWE generates multivariant binaries that embed hundreds of function variants. We execute the multivariant binaries on the world-wide edge platform provided by Fastly. We show that, at runtime, the multivariant exhibit a remarkable diversity of execution traces, across the whole edge platform.
 },
-    booktitle = {Under review},
+    booktitle = {MTD 2022},
     pages = {TODO},
     numpages = {TODO},
     keywords = {Web, WebAssembly, LLVM, Edge-Cloud computing, Edge, Lucet},
