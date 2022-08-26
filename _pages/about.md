@@ -15,7 +15,7 @@ profile:
 news: false  # includes a list of news items
 selected_papers: true # includes a list of papers marked as "selected={true}"
 social: true  # includes social icons at the bottom of the page
-years: [2021, 2020, 2019]
+years: [2022, 2021, 2020, 2019]
 ---
  <h2>About me</h2>
 
