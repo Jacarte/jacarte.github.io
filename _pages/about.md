@@ -26,18 +26,6 @@ href="https://www.trustfull.proj.kth.se/">TRUSTFULL</a>) project.
 
 <!-- <img style="max-width: 400px" src="assets/img/BOBE.gif"/>
  -->
- <h2>My GitHub</h2>
- stats generated with <a href="https://github.com/jacarte/github-stats">https://github.com/jacarte/github-stats</a>
-
-![overview](https://raw.githubusercontent.com/Jacarte/github-stats/master/generated/overview.svg)
-
-![languages](https://raw.githubusercontent.com/Jacarte/github-stats/master/generated/languages_count.svg)
-
- <h3>Achievements</h3>
-  <a href="https://archiveprogram.github.com/"> Arctic Code Vault Contributor <img alt="Arctic Code Vault Contributor" src="https://github.githubassets.com/images/modules/profile/badge--acv-64.png" width="64px">
-  <br/>
-  <a href="https://github.com/bytecodealliance/governance/blob/main/recognized-contributors.md"> Bytecode Alliance Contributor <img width="120" src="https://bytecodealliance.org/images/bytecode-alliance-logo.svg"/></a>
-</a>
 
 <h2>Logs</h2>
 <div class="collab">
