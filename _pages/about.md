@@ -19,10 +19,9 @@ years: [2022, 2021, 2020, 2019]
 ---
  <h2>About me</h2>
 
-I am a PhD student at KTH Royal Institute of Technology since 2019, more
-specifically, I do Software Randomization for Security. I am a team member of
-the Trustworthy Fullstack Computing (<a
-href="https://www.trustfull.proj.kth.se/">TRUSTFULL</a>) project.
+I graduated from the University of Havana(Cuba) in 2016 with a Master’s Degree in Computer Science. 
+Currently, as a PhD student at KTH Royal Institute of Technology since 2019, I do <a href="https://www.jacarte.me/thesis/">Software Diversification</a> for reliability and security. 
+I am a team member of the Trustworthy Fullstack Computing (<a href="https://www.trustfull.proj.kth.se/">TRUSTFULL</a>) project.
 
 <!-- <img style="max-width: 400px" src="assets/img/BOBE.gif"/>
  -->
@@ -30,6 +29,9 @@ href="https://www.trustfull.proj.kth.se/">TRUSTFULL</a>) project.
 <h2>Logs</h2>
 <div class="collab">
   <ul>
+    <li><strong>June, 2022</strong> <a href="https://www.jacarte.me/thesis/">Artificial Software Diversitication for WebAssembly manuscript</a> for Licentiate degree </li>
+    <li><strong>June, 2022</strong> wasm-mutate presented at <a href="https://pldi22.sigplan.org/home/egraphs-2022#program"> EGRAPHS, PLDI 2022 </a> </li>
+    <li><strong>June, 2022</strong> MEWE presented at <a href="https://2022.ecoop.org/home/paw-2022#program"> PAW, ECOOP 2022 </a> </li>
     <li><strong>April, 2022</strong> Officially aknowledged as a <a href="https://github.com/bytecodealliance/governance/blob/main/recognized-contributors.md"> bytecode alliance contributor</a> </li>
     <li><strong>April, 2022</strong> wasm-mutate was accepted as a talk in <a href="https://pldi22.sigplan.org/home/egraphs-2022">EGRAPHS 2022 Workshop, PLDI</a> </li>
     <li><strong>February, 2022</strong> PC member for <a href="https://2022.ecoop.org/home/paw-2022">PAW 2022 Workshop</a> </li>
