@@ -52,6 +52,32 @@ I am a team member of the Trustworthy Fullstack Computing (<a href="https://www.
   <li>
       <div class="row">
         <div class="col-sm-2 abbr">
+        </div>
+        <div id="breaking" class="col-sm-8">
+          <div class="title"><a target="_blank">WebAssembly Diversification for Malware Evasion (Review process)</a></div>
+          <div class="author">
+                      Cabrera Arteaga, Javier, Monperrus, Martin, Toady Tim and Baudry, Benoit
+          </div>
+
+        <div class="links">
+          <a class="abstract btn btn-sm z-depth-0" role="button">Abs</a>
+        </div>
+
+        <!-- Hidden abstract block -->
+        
+        <div class="abstract hidden">
+          <p>
+          WebAssembly is a binary format that has become an essential component of the web nowadays. Providing a faster alternative to JavaScript in the browser, this new technology has been embraced from its early days to create cryptomalware. This has triggered a solid effort to propose defenses that can detect WebAssembly malware. Yet, no defensive work has assumed that attackers would use evasion techniques. In this paper, we study how to evade WebAssembly cryptomalware detectors. We propose a novel evasion technique based on a state-of-the-art WebAssembly binary diversifier. We use the worldwide authoritative VirusTotal as malware detector to evaluate our technique. Our results demonstrate that it is possible to automatically generate variants of WebAssembly cryptomalware, which evade the considered strong detector. Remarkably, the variants introduce limited performance overhead. Our experiments also provide novel insights about which WebAssembly code transformations are the best suited for malware evasion. This provides insights for the community to improve the state of the art of WebAssembly malware detection.
+          </p>
+        </div>
+        
+      
+        </div>
+      </div>
+    </li>
+  <li>
+      <div class="row">
+        <div class="col-sm-2 abbr">
 
             <abbr class="badge">EGRAPHS 2022</abbr>
         </div>
