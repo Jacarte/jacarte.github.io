@@ -19,17 +19,20 @@ years: [2022, 2021, 2020, 2019]
 ---
  <h2>About me</h2>
 
-I graduated from the University of Havana(Cuba) in 2016 with a Master’s Degree in Computer Science. 
-Currently, as a PhD student at KTH Royal Institute of Technology since 2019, I do <a href="https://www.jacarte.me/thesis/">Software Diversification</a> for reliability and security. 
+I graduated from the University of Havana(Cuba) in 2016 with a Master’s Degree in Computer Science.
+Currently, as a PhD student at KTH Royal Institute of Technology since 2019, I do <a href="https://www.jacarte.me/thesis/">Software Diversification</a> for reliability and security.
 I am a team member of the Trustworthy Fullstack Computing (<a href="https://www.trustfull.proj.kth.se/">TRUSTFULL</a>) project.
 
 <!-- <img style="max-width: 400px" src="assets/img/BOBE.gif"/>
  -->
 
+ <img src="https://github.com/jacarte/github-stats/raw/master/generated/overview.svg" alt="" style="max-width: 100%;">
+ <img src="https://github.com/jacarte/github-stats/raw/master/generated/languages_count.svg" alt="" style="max-width: 100%;">
+
 <h2>Logs</h2>
 <div class="collab">
   <ul>
-    <li><strong>June, 2022</strong> <a href="https://www.jacarte.me/thesis/">Artificial Software Diversitication for WebAssembly manuscript</a> for Licentiate degree </li>
+    <li><strong>October, 2022</strong> <a href="https://www.jacarte.me/thesis/">Artificial Software Diversitication for WebAssembly manuscript</a>, Licentiate degree </li>
     <li><strong>June, 2022</strong> wasm-mutate presented at <a href="https://pldi22.sigplan.org/home/egraphs-2022#program"> EGRAPHS, PLDI 2022 </a> </li>
     <li><strong>June, 2022</strong> MEWE presented at <a href="https://2022.ecoop.org/home/paw-2022#program"> PAW, ECOOP 2022 </a> </li>
     <li><strong>April, 2022</strong> Officially aknowledged as a <a href="https://github.com/bytecodealliance/governance/blob/main/recognized-contributors.md"> bytecode alliance contributor</a> </li>
@@ -47,9 +50,9 @@ I am a team member of the Trustworthy Fullstack Computing (<a href="https://www.
 <h2>Proofs of concept and ongoing works</h2>
   <div class="publications">
   <h3 class="year">2022</h3>
-  
+
   <ol class="bibliography">
-  
+
   <li>
       <div class="row">
         <div class="col-sm-2 abbr">
@@ -67,7 +70,7 @@ I am a team member of the Trustworthy Fullstack Computing (<a href="https://www.
         </div>
 
         <!-- Hidden abstract block -->
-        
+
         </div>
       </div>
     </li>
@@ -86,7 +89,7 @@ I am a team member of the Trustworthy Fullstack Computing (<a href="https://www.
         </div>
 
         <!-- Hidden abstract block -->
-        
+
         <div class="abstract hidden">
           <p>In this work we proposed a data augmentation
               technique using a novel mutation tool for WebAssembly that
@@ -102,8 +105,8 @@ I am a team member of the Trustworthy Fullstack Computing (<a href="https://www.
               for WebAssembly.
           </p>
         </div>
-        
-      
+
+
         </div>
       </div>
     </li>
@@ -155,7 +158,7 @@ I am a team member of the Trustworthy Fullstack Computing (<a href="https://www.
         <a href="{{s.url}}" target="_blank"><strong>{{s.student}}: </strong>{{s.name}}</a>
         <p>{{s.abstract}}</p>
       </div>
-      
+
       </li>
   {% endfor %}
 
