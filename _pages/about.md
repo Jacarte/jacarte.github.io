@@ -32,6 +32,7 @@ I am a team member of the Trustworthy Fullstack Computing (<a href="https://www.
 <h2>Logs</h2>
 <div class="collab">
   <ul>
+    <li><strong>March, 2023</strong><a href="https://www.dagstuhl.de/en/seminars/seminar-calendar/seminar-details/23101" target="_blank"> Dagstuhl seminar "Foundations of WebAssembly"</a></li>
     <li><strong>October, 2022</strong> <a href="https://www.jacarte.me/thesis/">Artificial Software Diversitication for WebAssembly manuscript</a>, Licentiate degree </li>
     <li><strong>June, 2022</strong> wasm-mutate presented at <a href="https://pldi22.sigplan.org/home/egraphs-2022#program"> EGRAPHS, PLDI 2022 </a> </li>
     <li><strong>June, 2022</strong> MEWE presented at <a href="https://2022.ecoop.org/home/paw-2022#program"> PAW, ECOOP 2022 </a> </li>
