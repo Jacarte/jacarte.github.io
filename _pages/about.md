@@ -53,28 +53,7 @@ I am a team member of the Trustworthy Fullstack Computing (<a href="https://www.
 
   <ol class="bibliography">
 
-  <li>
-      <div class="row">
-        <div class="col-sm-2 abbr">
-
-            <abbr class="badge">EGRAPHS 2022</abbr>
-        </div>
-        <div id="breaking" class="col-sm-8">
-          <div class="title"><a target="_blank" href="assets/pdf/wasm_mutate.pdf">Wasm-mutate: Fuzzing WebAssembly Compilers with E-Graphs</a></div>
-          <div class="author">
-                      Cabrera Arteaga, Javier
-          </div>
-
-        <div class="links">
-          <a class="abstract btn btn-sm z-depth-0" role="button">Abs</a>
-        </div>
-
-        <!-- Hidden abstract block -->
-
-        </div>
-      </div>
-    </li>
-    <li>
+   <li>
       <div class="row">
         <div class="col-sm-2 abbr">
         </div>
