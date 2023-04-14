@@ -23,6 +23,8 @@ I graduated from the University of Havana(Cuba) in 2016 with a Master’s Degree
 Currently, as a PhD student at KTH Royal Institute of Technology since 2019, I do <a href="https://www.jacarte.me/thesis/">Software Diversification</a> for reliability and security.
 I am a team member of the Trustworthy Fullstack Computing (<a href="https://www.trustfull.proj.kth.se/">TRUSTFULL</a>) project.
 
+Testing commit
+
 <!-- <img style="max-width: 400px" src="assets/img/BOBE.gif"/>
  -->
 
