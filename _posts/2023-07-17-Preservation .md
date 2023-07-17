@@ -1,9 +1,9 @@
 ---
 layout: post
-title: wasmtime, IntelPIN and a lot of traces
+title: About Software Diversification Preservation
 date: 2023-7-13 13:32:20 +0300
 description: >
-    Custom Rust instrumentor for better fuzzing
+    Something about software diversification preservation.
 fig-caption: # Add figcaption (optional)
 tags: [WebAssembly, wasmtime, IntelPIN]
 comments: true

@@ -9,4 +9,4 @@ tags: [WebAssembly, wasmtime, IntelPIN]
 comments: true
 ---
 
-WIP ;)
+This is the first of 5 new blog posts about some engineering challenges experienced by myself in my last research.

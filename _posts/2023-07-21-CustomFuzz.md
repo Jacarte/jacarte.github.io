@@ -1,9 +1,9 @@
 ---
 layout: post
-title: wasmtime, IntelPIN and a lot of traces
+title: A little bit of Rust meta
 date: 2023-7-13 13:32:20 +0300
 description: >
-    Custom Rust instrumentor for better fuzzing
+    Creating a custom coverage/whatever based tool with proc mracos for Rust
 fig-caption: # Add figcaption (optional)
 tags: [WebAssembly, wasmtime, IntelPIN]
 comments: true
