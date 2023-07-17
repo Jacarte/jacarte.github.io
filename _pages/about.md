@@ -23,17 +23,12 @@ I graduated from the University of Havana(Cuba) in 2016 with a Master’s Degree
 Currently, as a PhD student at KTH Royal Institute of Technology since 2019, I do <a href="https://www.jacarte.me/thesis/">Software Diversification</a> for reliability and security. My focus is WebAssembly.
 I am a team member of the Trustworthy Fullstack Computing (<a href="https://www.trustfull.proj.kth.se/">TRUSTFULL</a>) project.
 
-<!-- <img style="max-width: 400px" src="assets/img/BOBE.gif"/>
- -->
-
- <img src="https://github.com/jacarte/github-stats/raw/master/generated/overview.svg" alt="" style="max-width: 100%;">
- <img src="https://github.com/jacarte/github-stats/raw/master/generated/languages_count.svg" alt="" style="max-width: 100%;">
-
 <h2>Logs</h2>
 <div class="collab">
   <ul>
+    <li><strong>May, 2023</strong><a href="https://www.sciencedirect.com/science/article/pii/S0167404823002067" target="_blank"> Malware Diversification for Malware Evasion accepted at Computers&Security journal as a collaboration with Tim Toady</a></li>
     <li><strong>March, 2023</strong><a href="https://www.dagstuhl.de/en/seminars/seminar-calendar/seminar-details/23101" target="_blank"> Dagstuhl seminar "Foundations of WebAssembly"</a></li>
-    <li><strong>October, 2022</strong> <a href="https://www.jacarte.me/thesis/">Artificial Software Diversitication for WebAssembly manuscript</a>, Licentiate degree </li>
+    <li><strong>October, 2022</strong> <a href="https://www.jacarte.me/thesis/">Artificial Software Diversitication for WebAssembly manuscript</a>, Teknologie licentiatexamen </li>
     <li><strong>June, 2022</strong> wasm-mutate presented at <a href="https://pldi22.sigplan.org/home/egraphs-2022#program"> EGRAPHS, PLDI 2022 </a> </li>
     <li><strong>June, 2022</strong> MEWE presented at <a href="https://2022.ecoop.org/home/paw-2022#program"> PAW, ECOOP 2022 </a> </li>
     <li><strong>April, 2022</strong> Officially aknowledged as a <a href="https://github.com/bytecodealliance/governance/blob/main/recognized-contributors.md"> bytecode alliance contributor</a> </li>

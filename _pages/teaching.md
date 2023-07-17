@@ -6,6 +6,19 @@ description:
 nav: true
 ---
 
+
+<h3 class="year">2023</h3>
+
+
+- Teacher Assistant in <a href="https://www.kth.se/student/kurser/kurs/DD2525?l=en">DD2525</a> Language Based Security
+
+- Master thesis supervision - Anna Skantz:  Performance Evaluation of Kotlin Multiplatform Mobile and Native iOS Development in Swift.
+
+  *Today's mobile development resides in the two main operating systems Android and iOS. It is popular to develop mobile applications individually for each respective platform, referred to as native development. To reduce additional costs, cross-platform solutions have emerged that enable shared development for both platforms. KMM is a relatively unexplored cross-platform tool developed by JetBrains. The purpose of this study is to evaluate the performance of iOS applications developed in KMM compared to native Swift. We compare the two approaches for developing iOS apps by compiling a benchmark suite and measuring the performance metrics execution time, memory consumption, and CPU usage. Our benchmark suite is a collection of 7 benchmarks consisting of high-level functionalities networking and database management, as well as low-level computational tasks from the CLBG suite. For the studied benchmarks, the results indicate that KMM generally achieves faster execution times,  but with a trade-off overhead in higher memory consumption and CPU usage. We have found KMM to achieve up to 2,7 seconds faster execution time, consume up to 390MB more memory, and up to 30\%  more CPU than with native Swift. 
+  Besides, our results highlight correlations between the garbage collection cycles of KMM with profiling patterns of memory consumption and CPU usage.*
+
+
+
 <h3 class="year">2022</h3>
 
 - Teacher Assistant in <a href="https://www.kth.se/student/kurser/kurs/DD2488">DD2488</a> Compiler Construction

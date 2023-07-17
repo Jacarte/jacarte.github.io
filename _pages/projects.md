@@ -6,6 +6,14 @@ description:
 nav: true
 ---
 
+
+<!-- <img style="max-width: 400px" src="assets/img/BOBE.gif"/>
+ -->
+
+ <img src="https://github.com/jacarte/github-stats/raw/master/generated/overview.svg" alt="" style="max-width: 100%;">
+ <img src="https://github.com/jacarte/github-stats/raw/master/generated/languages_count.svg" alt="" style="max-width: 100%;">
+
+
 <div class="projects grid">
 
   {% assign sorted_projects = site.projects | sort: "importance" %}
