@@ -6,7 +6,7 @@ description: <a href="#">Affiliations</a>. Address. Contacts. Moto. Etc.
 
 profile:
   align: right
-  image: prof_pic.jpg
+  image: prof_pic2.jpg
   address: >
     <p>Lindstedtsvägen 3, Level 5, Office 1547</p>
     <p>KTH Campus, Stockholm, Sweden</p>
@@ -25,7 +25,7 @@ In addition to my academic pursuits, I am a contributing member of the Trustwort
 <h2>Logs</h2>
 <div class="collab">
   <ul>
-    <li><strong>May, 2023</strong><a href="https://www.sciencedirect.com/science/article/pii/S0167404823002067" target="_blank"> Malware Diversification for Malware Evasion</a>  accepted at Computers&Security journal as a collaboration with Tim Toady</li>
+    <li><strong>May, 2023</strong><a href="https://www.sciencedirect.com/science/article/pii/S0167404823002067" target="_blank"> WebAssembly Diversification for Malware Evasion</a>  accepted at Computers&Security journal as a collaboration with Tim Toady</li>
     <li><strong>March, 2023</strong><a href="https://www.dagstuhl.de/en/seminars/seminar-calendar/seminar-details/23101" target="_blank"> Dagstuhl seminar "Foundations of WebAssembly"</a></li>
     <li><strong>October, 2022</strong> <a href="https://www.jacarte.me/thesis/">Artificial Software Diversitication for WebAssembly manuscript</a>, Teknologie licentiatexamen </li>
     <li><strong>June, 2022</strong> wasm-mutate presented at <a href="https://pldi22.sigplan.org/home/egraphs-2022#program"> EGRAPHS, PLDI 2022 </a> </li>
