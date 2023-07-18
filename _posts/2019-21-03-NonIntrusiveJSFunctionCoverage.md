@@ -10,26 +10,24 @@ fig-caption: # Add figcaption (optional)
 tags: [Fuzzing, JS, Graal, Coverage]
 comments: true
 ---
+I'm keen to develop a rudimentary instrumentation tool capable of measuring aspects such as code coverage, correctness attraction experimentation, and code analysis in JS programs, all without altering the JS code itself.
 
-I would like to try to make a simple instrumentation tool, to measure things like code coverage, correctness attraction experimentation and code analysis in JS programs, but, without modifying the JS code itself.
+Remember <a href="https://www.graalvm.org/docs/why-graal/" target="_blank">Graal</a> and Truffle? There exists an <a href="https://www.graalvm.org/docs/why-graal/" target="_blank">open source JS engine implementation</a> featuring these technologies. Why choose GraalJS over V8's source code? Primarily, it's due to our affinity for Java and the desire to implement this idea as swiftly as possible. Moreover, the architecture of GraalJS is more comprehensible than that of C.
 
-Do you remember <a href="https://www.graalvm.org/docs/why-graal/" target="_blank">Graal</a> and Truffle ? Well ... there is an <a href="https://www.graalvm.org/docs/why-graal/" target="_blank">open source JS engine implementation</a>. Why GraalJS instead V8 source code ? Because we love Java and I want to implement this idea in the fastest way, besides that, the GraalJS architecture is more understandable than the C one :(. 
+All languages can be translated into an Abstract Syntax Tree (AST), which the compiler then traverses at least once. During the interpreter evaluation of code, each node of the AST is visited, executing the specific semantics of the nodes. For instance, for a mathematical operation node:
 
-All languages can be translated to an AST (Abstract Syntax Tree) and then the compiler traverses it at least once. Interpreter evaluation of code visit each node of the AST executing the specifi semantic of nodes, for example, a math operation node:
+1. Evaluate the left child.
+2. Evaluate the right child.
+3. Perform the operation on the results.
+4. Return the result.
 
-1. Evaluate left child
-2. Evaluate right child
-3. Operate results
-4. Return result  
-
-What if we want to count the *sum* operations in any JS script? The simplest idea is to check the operator type and augment a global counter variable in the node behavior.
+Suppose we wish to count the number of sum operations in any JS script. The simplest approach would be to identify the operator type and increment a global counter variable within the node behavior.
 
 **Registering function entering**
 
+Let's consider a specific example: measuring the function coverage of a JS script execution. The architecture of the GraalJS implementation ensures that each AST node is responsible for its own behavior. As such, there could very well be a "function node" or something similar.
 
-For a concrete example, I want to measure the function coverage of a JS script execution. The architecture of the GraalJS implementation ensures each AST node implements his own behavior. So, maybe there is a "function node" or something like that.
-
-So, first, we look for the <a href="https://github.com/graalvm/graaljs/blob/master/graal-js/src/com.oracle.truffle.js/src/com/oracle/truffle/js/nodes/function/FunctionBodyNode.java" target="_blank">Function Node implementation</a>
+So, our first step is to examine the <a href="https://github.com/graalvm/graaljs/blob/master/graal-js/src/com.oracle.truffle.js/src/com/oracle/truffle/js/nodes/function/FunctionBodyNode.java" target="_blank">implementation of the Function Node</a>.
 
 ```java
 package com.oracle.truffle.js.nodes.function;
@@ -67,8 +65,7 @@ public final class FunctionBodyNode extends AbstractBodyNode {
 }
 ```
 
-In the code above, you can find a method with name *execute*, that is the entrypoint for the AST evaluator to execute the node behavior. Then, we can inject the function coverage instrumentation there.
-
+The above code contains a method named execute, which serves as the entry point for the AST evaluator to carry out the behavior of the node. This would be an ideal location to introduce our function coverage instrumentation.
 
 ```java
 @Override
