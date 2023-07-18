@@ -42,6 +42,28 @@ In addition to my academic pursuits, I am a contributing member of the Trustwort
   </ul>
 </div>
 
+
+<h2>Publications</h2>
+<div class="publications">
+
+{% for y in page.years %}
+  <h3 class="year">{{y}}</h3>
+  {% bibliography -f papers -q @*[year={{y}}]* %}
+{% endfor %}
+
+
+<h2>Courses highlighting</h2>
+<div class="publications">
+
+<ul>
+
+  {% for s in site.data.courses %}
+    <li><a href="{{s.url}}" target="_blank"><strong>{{s.code}} </strong>{{s.name}}</a></li>
+  {% endfor %}
+
+</ul>
+
+</div>
 <h2>Proofs of concept and ongoing works</h2>
   <div class="publications">
   <h3 class="year">2022</h3>
@@ -85,27 +107,6 @@ In addition to my academic pursuits, I am a contributing member of the Trustwort
       </div>
     </li>
   </ol>
-</div>
-<h2>Publications</h2>
-<div class="publications">
-
-{% for y in page.years %}
-  <h3 class="year">{{y}}</h3>
-  {% bibliography -f papers -q @*[year={{y}}]* %}
-{% endfor %}
-
-
-<h2>Courses highlighting</h2>
-<div class="publications">
-
-<ul>
-
-  {% for s in site.data.courses %}
-    <li><a href="{{s.url}}" target="_blank"><strong>{{s.code}} </strong>{{s.name}}</a></li>
-  {% endfor %}
-
-</ul>
-
 </div>
 
 <h2>Some slides</h2>

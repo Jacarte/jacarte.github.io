@@ -59,8 +59,8 @@ discus-identifier: jacarte-github-io
 # Blog
 # -----------------------------------------------------------------------------
 
-blog_name: Some thoughts  # your blog must have a name for it to show up in the nav bar
-blog_description: Some thoughts and ideas of mine
+blog_name: Small ideas  # your blog must have a name for it to show up in the nav bar
+blog_description: Small ideas and experiences on Software Engineering and Computer Science
 permalink: /blog/:year/:title/
 
 # Pagination
