@@ -19,14 +19,13 @@ years: [2023, 2022, 2021, 2020, 2019]
 ---
  <h2>About me</h2>
 
-I graduated from the University of Havana(Cuba) in 2016 with a Master’s Degree in Computer Science.
-Currently, as a PhD student at KTH Royal Institute of Technology since 2019, I do <a href="https://www.jacarte.me/thesis/">Software Diversification</a> for reliability and security. My focus is WebAssembly.
-I am a team member of the Trustworthy Fullstack Computing (<a href="https://www.trustfull.proj.kth.se/">TRUSTFULL</a>) project.
+I earned my Master's Degree in Computer Science from the University of Havana, Cuba, in 2016. Since 2019, I've been furthering my academic journey as a PhD student at the esteemed KTH Royal Institute of Technology, specializing in <a href="https://www.jacarte.me/thesis/">Software Diversification</a> to enhance reliability and security, with a primary emphasis on WebAssembly.
+In addition to my academic pursuits, I am a contributing member of the Trustworthy Fullstack Computing project, or <a href="https://www.trustfull.proj.kth.se/">TRUSTFULL</a>, where our team collaborates on significant advancements in the field.
 
 <h2>Logs</h2>
 <div class="collab">
   <ul>
-    <li><strong>May, 2023</strong><a href="https://www.sciencedirect.com/science/article/pii/S0167404823002067" target="_blank"> Malware Diversification for Malware Evasion accepted at Computers&Security journal as a collaboration with Tim Toady</a></li>
+    <li><strong>May, 2023</strong><a href="https://www.sciencedirect.com/science/article/pii/S0167404823002067" target="_blank"> Malware Diversification for Malware Evasion</a>  accepted at Computers&Security journal as a collaboration with Tim Toady</li>
     <li><strong>March, 2023</strong><a href="https://www.dagstuhl.de/en/seminars/seminar-calendar/seminar-details/23101" target="_blank"> Dagstuhl seminar "Foundations of WebAssembly"</a></li>
     <li><strong>October, 2022</strong> <a href="https://www.jacarte.me/thesis/">Artificial Software Diversitication for WebAssembly manuscript</a>, Teknologie licentiatexamen </li>
     <li><strong>June, 2022</strong> wasm-mutate presented at <a href="https://pldi22.sigplan.org/home/egraphs-2022#program"> EGRAPHS, PLDI 2022 </a> </li>
