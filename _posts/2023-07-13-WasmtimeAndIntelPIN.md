@@ -9,25 +9,32 @@ tags: [WebAssembly, wasmtime, IntelPIN]
 comments: true
 ---
 
+## Software Diversity for WebAssembly
+
 In our laboratory, we specialize in Software Diversification. This involves the generation of multiple semantically equivalent variants from a single original program. Specifically, both the original program and any of its variants should yield the same output when given the same input. Our focus is primarily on diversifying **WebAssembly**.
 
 There are several ways to evaluate the level of diversity achieved. The most immediate method involves static analysis, where a variant is considered a diversified version of the original program if it exhibits structural differences. However, there may be instances where, despite the binaries being different, the execution behavior remains unchanged. An example of this might be a variant that merely alters the location of variable allocations. Though it differs from the original, compiler normalization may result in identical executed code. So, how do we evaluate dynamic diversity? Typically, this is accomplished by examining program traces.
 
-To assess diversification in WebAssembly, we've designed an interpreter that adheres to the virtual machine specification. In practice, we trace the stack and memory operations of the WebAssembly code, comparing the traces between the original program and its variants. We've recently shifted our approach to a more realistic scenario, choosing to gather the execution traces of WebAssembly programs as they operate in real-world situations. Specifically, we aim to gather the most detailed execution traces of WebAssembly programs as they run with **wasmtime**.
+
+## Assessing Software Diversity for WebAssembly
+
+To assess diversification in WebAssembly, in the past, we've designed an interpreter that adheres to the virtual machine specification. In practice, we trace the stack and memory operations of the WebAssembly code, comparing the traces between the original program and its variants. We've recently shifted our approach to a more realistic scenario, choosing to gather the execution traces of WebAssembly programs as they operate in real-world situations. Specifically, we aim to gather the most detailed execution traces of WebAssembly programs as they run with **wasmtime**.
 
 Wasmtime is a high-performance WebAssembly compiler at the heart of revolutionary Function as a Service platforms. As a host, it processes input WebAssembly code, compiles it into machine code (it can also function as an interpreter), and executes the newly generated machine code. To gather the execution traces of a WebAssembly program run with wasmtime, we must pinpoint the machine code that directly originates from WebAssembly. We've chosen to employ **IntelPIN** for this task.
 
-In order to collect the execution traces of WebAssembly programs run with wasmtime, we need to implement a Pintool. A Pintool is a program analysis tool that we'll create using IntelPIN's dynamic binary instrumentation framework, allowing us to observe and manipulate the execution of the program at the instruction level.
 
-In the image below we plot the execution traces collected from our Pintool of running a WebAssembly program `pin -t pintol -- wasmtime run input.wasm`
-The X axis represents the memory offset and the Y axis represents time. Black points represent executed instructions, green points represent read operations and red points represent write operations.
+## IntelPIN
+
+In order to collect the execution traces of WebAssembly programs run with wasmtime, we need to implement a Pintool. A Pintool is a program analysis tool that we'll create using IntelPIN's dynamic binary instrumentation framework, allowing us to observe and manipulate the execution of the program at the instruction level.
+The following image depicts the execution traces gathered from our Pintool while running a WebAssembly program with the command `pin -t pintol -- wasmtime run input.wasm`.
+The X-axis signifies the memory offset, while the Y-axis denotes time. The black points symbolize executed instructions, the green points indicate read operations, and the red points correspond to write operations.
 
 
 TODO image
 
 
 It appears our system is functional. However, the execution traces currently include substantial non-WebAssembly related data, such as all the operations performed by wasmtime itself.
-We need to refine these traces to filter out the extraneous information. Fortunately, wasmtime offers a feature that will be of great help: it can detect when program execution transitions between WebAssembly and the wasmtime host through a mechanism known as **hooks**.
+We need to refine these traces to filter out the extraneous information. Fortunately, wasmtime offers a feature that will be of great help: it can detect when program execution transitions between WebAssembly and the wasmtime host.
 To illustrate how these hooks are used, we present the following Rust code snippet:
 
 ```Rust
@@ -82,6 +89,9 @@ store.call_hook(|t, tpe|{
 });
 ```
 
+
+## Validating our Pintool
+
 We conduct an evaluation of our filtering mechanism using the Daredevil tool, which can be found at https://github.com/SideChannelMarvels/Daredevil, paired with a whitebox cryptography challenge that has been ported to WebAssembly. Daredevil employs Differential Computing Analysis to extract keys from whitebox encrypted programs.
 
 The success of this tool is heavily dependent on execution traces. Consequently, the precision of our technique is paramount to successfully extracting keys using Daredevil and our WebAssembly execution traces. In scenarios where our filtering method is not applied, the Daredevil tool fails to operate effectively under the proposed configuration due to the overwhelming abundance of traces.
@@ -93,6 +103,8 @@ Therefore, our technique seems to bring fruits, we can now use it to assess dyna
 
 The images below illustrate the stark contrast in trace plots before and after the application of our filtering process.
 
-
+TODO image
 
 The code and implementation of our Pintool can be found at https://github.com/Jacarte/tawasco/tree/main/host_based/tracer 
+
+> **Disclaimer** The plots are obtained using the TracerGraph tool https://github.com/SideChannelMarvels/Tracer/tree/master/TraceGraph. We collect the traces in the same format needed to perform the Daredevil attack and therefore, their plotting.
