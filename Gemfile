@@ -8,8 +8,6 @@ end
 group :jekyll_plugins do
     gem 'github-pages'
     gem 'jekyll'
-    gem 'kramdown-syntax-coderay'
-    gem 'kramdown-syntax_tree_sitter'
     gem 'jekyll-email-protect'
     gem 'jekyll-paginate-v2'
     gem 'jekyll-scholar'
