@@ -104,8 +104,10 @@ highlighter: rouge
 highlight_theme: github  # https://github.com/jwarby/jekyll-pygments-themes
 kramdown:
   input: GFM
+  syntax_highlighter: coderay
   syntax_highlighter_opts:
     css_class: 'highlight'
+    
     span:
       line_numbers: false
     block:
