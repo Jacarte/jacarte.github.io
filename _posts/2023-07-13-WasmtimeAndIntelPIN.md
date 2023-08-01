@@ -26,14 +26,7 @@ Wasmtime is a high-performance WebAssembly compiler at the heart of revolutionar
 ## IntelPIN
 
 In order to collect the execution traces of WebAssembly programs run with wasmtime, we need to implement a Pintool. A Pintool is a program analysis tool that we'll create using IntelPIN's dynamic binary instrumentation framework, allowing us to observe and manipulate the execution of the program at the instruction level.
-The following image depicts the execution traces gathered from our Pintool while running a WebAssembly program with the command `pin -t pintol -- wasmtime run input.wasm`.
-The X-axis signifies the memory offset, while the Y-axis denotes time. The black points symbolize executed instructions, the green points indicate read operations, and the red points correspond to write operations.
-
-
-TODO image
-
-
-It appears our system is functional. However, the execution traces currently include substantial non-WebAssembly related data, such as all the operations performed by wasmtime itself.
+However, the execution traces currently include substantial non-WebAssembly related data, such as all the operations performed by wasmtime itself.
 We need to refine these traces to filter out the extraneous information. Fortunately, wasmtime offers a feature that will be of great help: it can detect when program execution transitions between WebAssembly and the wasmtime host.
 To illustrate how these hooks are used, we present the following Rust code snippet:
 
@@ -92,19 +85,21 @@ store.call_hook(|t, tpe|{
 
 ## Validating our Pintool
 
-We conduct an evaluation of our filtering mechanism using the Daredevil tool, which can be found at https://github.com/SideChannelMarvels/Daredevil, paired with a whitebox cryptography challenge that has been ported to WebAssembly. Daredevil employs Differential Computing Analysis to extract keys from whitebox encrypted programs.
+We conduct an evaluation of our filtering mechanism using the Deadpool tool, which can be found at https://github.com/SideChannelMarvels/Deadpool, paired with a whitebox cryptography challenge that has been ported to WebAssembly. Deadpool employs Differential Computing Analysis to extract keys from whitebox encrypted programs.
 
-The success of this tool is heavily dependent on execution traces. Consequently, the precision of our technique is paramount to successfully extracting keys using Daredevil and our WebAssembly execution traces. In scenarios where our filtering method is not applied, the Daredevil tool fails to operate effectively under the proposed configuration due to the overwhelming abundance of traces.
+The success of this tool is heavily dependent on execution traces. Consequently, the precision of our technique is paramount to successfully extracting keys using Deadpool and our WebAssembly execution traces. In scenarios where our filtering method is not applied, the Deadpool tool fails to operate effectively under the proposed configuration due to the overwhelming abundance of traces.
 
-Our aim is to prove the effectiveness of our filtering mechanism by operating the Daredevil tool on traces harvested solely from WebAssembly execution. If the Daredevil tool manages to successfully extract the key post-filtering, it will serve as irrefutable proof that our mechanism is functioning as designed.
+Our aim is to prove the effectiveness of our filtering mechanism by operating the Deadpool tool on traces harvested solely from WebAssembly execution. If the Deadpool tool manages to successfully extract the key post-filtering, it will serve as irrefutable proof that our mechanism is functioning as designed.
 
-Upon running this straightforward experiment, Daredevil succeeds in exfiltrating the key using its initial configuration.
+Upon running this straightforward experiment, Deadpool succeeds in exfiltrating the key using its initial configuration.
 Therefore, our technique seems to bring fruits, we can now use it to assess dynamic diversity.
 
-The images below illustrate the stark contrast in trace plots before and after the application of our filtering process.
+The images below illustrate the stark contrast in trace plot after the application of our filtering process.
 
-TODO image
+![alt results](/assets/img/wb.png)
+
+Taking a look at the traces plot of the original Deadpool paper, it seems that we are able to filter and provide the same pattern for the original whitebox crypto challenge.
 
 The code and implementation of our Pintool can be found at https://github.com/Jacarte/tawasco/tree/main/host_based/tracer 
 
-> **Disclaimer** The plots are obtained using the TracerGraph tool https://github.com/SideChannelMarvels/Tracer/tree/master/TraceGraph. We collect the traces in the same format needed to perform the Daredevil attack and therefore, their plotting.
+> **Disclaimer** The plots are obtained using the TracerGraph tool https://github.com/SideChannelMarvels/Tracer/tree/master/TraceGraph. We collect the traces in the same format needed to perform the Deadpool attack and therefore, their plotting.
