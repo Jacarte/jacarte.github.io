@@ -7,7 +7,7 @@ description: >
 meta: >
     We use IntelPIN and wasmtime to trace only Wasm instructions for a wasmtime execution.
 fig-caption: # Add figcaption (optional)
-og_image: /assets/img/wami.png
+img: /assets/img/wami.png
 tags: [WebAssembly, wasmtime, IntelPIN]
 comments: true
 ---
