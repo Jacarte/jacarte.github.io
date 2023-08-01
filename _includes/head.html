@@ -3,7 +3,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 
 <title>{% if site.title == blank %}{{ site.title }}{% else %}{{ site.first_name }} {{ site.middle_name }} {{ site.last_name }}{% endif %}{% if page.title and page.url != "/" %} | {{ page.title }}{% endif %}</title>
-<meta name="description" content="{{ site.description }}">
+<meta name="description" content="{{ page.description | prepend: site.description }}">
 
 <!-- Bootstrap & MDB -->
 <link href="https://stackpath.bootstrapcdn.com/bootstrap/{{ site.bootstrap.version }}/css/bootstrap.min.css" rel="stylesheet" integrity="{{ site.bootstrap.integrity.css }}" crossorigin="anonymous">
