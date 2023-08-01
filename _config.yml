@@ -99,9 +99,8 @@ news_limit: 10
 # -----------------------------------------------------------------------------
 
 # Markdown and syntax highlight
-markdown: kramdown
+markdown:    kramdown
 highlighter: rouge
-highlight_theme: github  # https://github.com/jwarby/jekyll-pygments-themes
 kramdown:
   input: GFM
   syntax_highlighter: rouge
@@ -112,6 +111,9 @@ kramdown:
     block:
       line_numbers: true
       start_line: 1
+
+sass:
+  style: :expanded # You might prefer to minify using :compressed
 
 # Includes & excludes
 include: ['_pages']

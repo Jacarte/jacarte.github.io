@@ -35,7 +35,7 @@ However, the execution traces currently include substantial non-WebAssembly rela
 We need to refine these traces to filter out the extraneous information. Fortunately, wasmtime offers a feature that will be of great help: it can detect when program execution transitions between WebAssembly and the wasmtime host.
 To illustrate how these hooks are used, we present the following Rust code snippet:
 
-```Rust
+{% highlight rust %}
 store.call_hook(|t, tpe|{
     match tpe {
         // The  code will jump out of the Wasm program
@@ -46,12 +46,12 @@ store.call_hook(|t, tpe|{
     }
     Ok(())
 });
-```
+{% endhighlight %}
 
 Implementing this strategy allows us to direct the Pintool to pause and restart the collection of instruction traces only when WebAssemly related code is executed. To facilitate this, we set up a simple mechanism for interfacing with the Pintool. At the outset of Pintool execution, we establish a shared memory space where a boolean variable is stored. If trace collection is permissible, this variable is set to `true`, and `false`` otherwise. This procedure effectively breaks down into two primary components: the shared memory access and the writing to it from the wasmtime host code.
 Below, we provide the code used for accessing shared memory. Although it's written in C, it can be incorporated at compile-time into the Rust binary.
 
-```C
+{% highlight c %}
 #include "common.c"
 void attach() {
     // This is different for macos
@@ -68,11 +68,12 @@ int set_lock(char val) {
     return 0;
 }
 
-```
+{% endhighlight %}
+
 
 Then, the first Rust code snippet is turned to.
 
-```Rust
+{% highlight rust %}
 store.call_hook(|t, tpe|{
     match tpe {
         wasmtime::CallHook::CallingHost => {
@@ -85,7 +86,8 @@ store.call_hook(|t, tpe|{
     }
     Ok(())
 });
-```
+{% endhighlight %}
+
 
 
 ## Validating our Pintool
