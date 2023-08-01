@@ -21,7 +21,9 @@ There are several ways to evaluate the level of diversity achieved. The most imm
 
 ## Assessing Software Diversity for WebAssembly
 
-To assess diversification in WebAssembly, in the past, we've designed an interpreter that adheres to the virtual machine specification. In practice, we trace the stack and memory operations of the WebAssembly code, comparing the traces between the original program and its variants. We've recently shifted our approach to a more realistic scenario, choosing to gather the execution traces of WebAssembly programs as they operate in real-world situations. Specifically, we aim to gather the most detailed execution traces of WebAssembly programs as they run with **wasmtime**.
+To assess diversification in WebAssembly, in the past, we've designed an interpreter that adheres to the virtual machine specification. In practice, we trace the stack and memory operations of the WebAssembly code, comparing the traces between the original program and its variants. If the traces are different under the same input, then the original program and the variant are behavioral different. 
+
+We've recently shifted our approach to a more realistic scenario, choosing to gather the execution traces of WebAssembly programs as they operate in real-world situations. Specifically, we aim to gather the most detailed execution traces of WebAssembly programs as they run with **wasmtime**.
 
 Wasmtime is a high-performance WebAssembly compiler at the heart of revolutionary Function as a Service platforms. As a host, it processes input WebAssembly code, compiles it into machine code (it can also function as an interpreter), and executes the newly generated machine code. To gather the execution traces of a WebAssembly program run with wasmtime, we must pinpoint the machine code that directly originates from WebAssembly. We've chosen to employ **IntelPIN** for this task.
 
@@ -97,7 +99,7 @@ Our aim is to prove the effectiveness of our filtering mechanism by operating th
 Upon running this straightforward experiment, Deadpool succeeds in exfiltrating the key using its initial configuration.
 Therefore, our technique seems to bring fruits, we can now use it to assess dynamic diversity.
 
-The images below illustrate the stark contrast in trace plot after the application of our filtering process.
+The image below illustrates the trace plot after the application of our filtering process.
 
 ![alt results](/assets/img/wb.png)
 
