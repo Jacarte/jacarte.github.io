@@ -21,7 +21,7 @@ There are several ways to evaluate the level of diversity achieved. The most imm
 
 ## Assessing Software Diversity for WebAssembly
 
-To assess diversification in WebAssembly, in the past, we've designed an interpreter that adheres to the virtual machine specification. In practice, we trace the stack and memory operations of the WebAssembly code, comparing the traces between the original program and its variants. If the traces are different under the same input, then the original program and the variant are behavioral different. 
+To assess diversification in WebAssembly, in the past, we've designed an interpreter that adheres to the virtual machine specification. In practice, we trace the stack and memory operations of the WebAssembly code, comparing the traces between the original program and its variants. If the traces are different under the same input, then the original program and the variant are behaviorally different. 
 
 We've recently shifted our approach to a more realistic scenario, choosing to gather the execution traces of WebAssembly programs as they operate in real-world situations. Specifically, we aim to gather the most detailed execution traces of WebAssembly programs as they run with **wasmtime**.
 
