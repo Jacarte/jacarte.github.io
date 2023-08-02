@@ -2,8 +2,8 @@
 layout: about
 title: About
 permalink: /
-description: <a href="#">Affiliations</a>. Address. Contacts. Moto. Etc.
-
+description: >
+  Javier Cabrera personal web page
 profile:
   align: right
   image: prof_pic2.jpg
