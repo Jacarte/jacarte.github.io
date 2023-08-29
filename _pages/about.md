@@ -34,7 +34,7 @@ In addition to my academic pursuits, I am a contributing member of the Trustwort
     <li><strong>April, 2022</strong> wasm-mutate was accepted as a talk in <a href="https://pldi22.sigplan.org/home/egraphs-2022">EGRAPHS 2022 Workshop, PLDI</a> </li>
     <li><strong>February, 2022</strong> PC member for <a href="https://2022.ecoop.org/home/paw-2022">PAW 2022 Workshop</a> </li>
     <li><strong>September-December, 2021</strong> Contractor Software Engineer at Fastly </li>
-    <li><strong>May 21, 2021</strong> We are collaborating with <a href="https://www.fastly.com/">Fastly</a> for sake of researching and security. Our research is focusing in diversification and randomization for WebAssembly. We recently received the credits for a <a href="https://www.fastly.com/blog/defense-in-depth-stopping-a-wasm-compiler-bug-before-it-became-a-problem">CVE discovered</a> in the Wasm Lucet compiler. </li>
+    <li><strong>May 21, 2021</strong> We receive acknowledgement for a <a href="https://www.fastly.com/blog/defense-in-depth-stopping-a-wasm-compiler-bug-before-it-became-a-problem">CVE discovered</a> in the Wasm Lucet compiler. </li>
     <li><strong>Feb 18, 2021</strong> CROW was presented at <a href="https://www.diverse-team.fr/">DiverSE team in University of Rennes 1</a> </li>
     <li><strong>Feb 25, 2021</strong> CROW was presented at <a href="https://madweb.work/program21/">MADWeb Workshop in NDSS's 21</a></li>
     <li><strong>Apr 14, 2021</strong> CROW was presented at <a href="https://team.inria.fr/spirals/">Spirals team in University of Lille</a></li>
