@@ -47,7 +47,7 @@ In addition to my academic pursuits, I am a contributing member of the Trustwort
 <h2>Professional services</h2>
 <div class="collab">
   <ul>
-        <li>Reviewer for Transactions on Software Engineering and Methodology TOSEM, <a href="https://www.webofscience.com/wos/author/record/JER-6620-2023">ACK<\a></li>
+        <li>Reviewer for Transactions on Software Engineering and Methodology TOSEM, <a href="https://www.webofscience.com/wos/author/record/JER-6620-2023">ACK</a></li>
         <li>Co-reviewer for NDSS, USENIX, TSE</li>
   </ul>
 </div>
