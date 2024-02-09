@@ -25,6 +25,7 @@ In addition to my academic pursuits, I am a contributing member of the Trustwort
 <h2>Logs</h2>
 <div class="collab">
   <ul>
+        <li><strong>Jan, 2024</strong><a href="https://www.sciencedirect.com/science/article/pii/S0167404823002067" target="_blank"> Wasm-Mutate: Fast and effective binary diversification for WebAssembly</a>  accepted at Computers&Security journal as a collaboration with Nick Fitzgerald</li>
     <li><strong>May, 2023</strong><a href="https://www.sciencedirect.com/science/article/pii/S0167404823002067" target="_blank"> WebAssembly Diversification for Malware Evasion</a>  accepted at Computers&Security journal as a collaboration with Tim Toady</li>
     <li><strong>March, 2023</strong><a href="https://www.dagstuhl.de/en/seminars/seminar-calendar/seminar-details/23101" target="_blank"> Dagstuhl seminar "Foundations of WebAssembly"</a></li>
     <li><strong>October, 2022</strong> <a href="https://www.jacarte.me/thesis/">Artificial Software Diversitication for WebAssembly manuscript</a>, Teknologie licentiatexamen </li>
