@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+<title>Javier  Cabrera Arteaga | Graal VM and Truffle. Proof of concept with Tiger language</title>
+<meta name="description" content="Graal VM group some languages in one polyglot compiler that runs in Java Virtual Machine. This work has proved the performance in that VM of a custom academic language called Tiger using the Truffle API.">
+
+<!-- Bootstrap & MDB -->
+<link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet" integrity="sha512-MoRNloxbStBcD8z3M/2BmnT+rg4IsMxPkXaGh2zD6LGNNFE80W3onsAhRcMAMrSoyWL9xD7Ert0men7vR8LUZg==" crossorigin="anonymous">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mdbootstrap/4.19.1/css/mdb.min.css" integrity="sha512-RO38pBRxYH3SoOprtPTD86JFOclM51/XTIdEPh5j8sj4tp8jmQIx26twG52UaLi//hQldfrh7e51WzP9wuP32Q==" crossorigin="anonymous" />
+
+<!-- Fonts & Icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css"  integrity="sha512-1PKOgIY59xJ8Co8+NE6FZ+LOAZKjy+KY8iq0G4B3CyeY6wYHN3yt9PW0XpSriVlkMXe40PTKnXrLnZ9+fkDaog==" crossorigin="anonymous">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/academicons/1.9.0/css/academicons.min.css" integrity="sha512-W4yqoT1+8NLkinBLBZko+dFB2ZbHsYLDdr50VElllRcNt2Q4/GSs6u71UHKxB7S6JEMCp5Ve4xjh3eGQl/HRvg==" crossorigin="anonymous">
+<link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Roboto+Slab:100,300,400,500,700|Material+Icons">
+
+<!-- Styles -->
+<link rel="shortcut icon" href="/assets/img/favicon.ico">
+<link rel="stylesheet" href="/assets/css/main.css">
+
+<link rel="canonical" href="/blog/2018/Graal-VM/">
+
+<!-- Open Graph -->
+
+<meta property="og:site_name" content="Personal blog
+Graal VM group some languages in one polyglot compiler that runs in Java Virtual Machine. This work has proved the performance in that VM of a custom academic language called Tiger using the Truffle API." />
+<meta property="og:type" content="object" />
+<meta property="og:title" content="Graal VM and Truffle. Proof of concept with Tiger language" />
+<meta property="og:url" content="/blog/2018/Graal-VM/" />
+<meta name="description" property="og:description" content="Graal VM group some languages in one polyglot compiler that runs in Java Virtual Machine. This work has proved the performance in that VM of a custom academic language called Tiger using the Truffle API." />
+<meta name="author" content="Javier Cabrera-Arteaga">
+<meta name="image" property="og:image" content="post2.png" />
+
+
+  </head>
+
+  <body class="fixed-top-nav ">
+
+    <!-- Header -->
+
+    <header>
+
+    <!-- Nav Bar -->
+    <nav id="navbar" class="navbar navbar-light bg-white navbar-expand-sm fixed-top">
+    <div class="container">
+      
+      <a class="navbar-brand title font-weight-lighter" href="/">
+       <span class="font-weight-bold">Javier</span>   Cabrera Arteaga PhD 
+      </a>
+      
+      <!-- Navbar Toogle -->
+      <button class="navbar-toggler collapsed ml-auto" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar top-bar"></span>
+        <span class="icon-bar middle-bar"></span>
+        <span class="icon-bar bottom-bar"></span>
+      </button>
+      <div class="collapse navbar-collapse text-right" id="navbarNav">
+        <ul class="navbar-nav ml-auto flex-nowrap">
+          <!-- About -->
+          <li class="nav-item ">
+            <a class="nav-link" href="/">
+              About
+              
+            </a>
+          </li>
+          
+          <!-- Blog -->
+          <li class="nav-item active">
+            <a class="nav-link" href="/blog/">
+              Blog
+              
+            </a>
+          </li>
+          
+          <!-- Other pages -->
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          <li class="nav-item ">
+              <a class="nav-link" href="/cv/">
+                CV
+                
+              </a>
+          </li>
+          
+          
+          
+          <li class="nav-item ">
+              <a class="nav-link" href="/thesis/">
+                Lic Thesis
+                
+              </a>
+          </li>
+          
+          
+          
+          
+          
+          <li class="nav-item ">
+              <a class="nav-link" href="/pthesis/">
+                PhD Thesis
+                
+              </a>
+          </li>
+          
+          
+          
+          <li class="nav-item ">
+              <a class="nav-link" href="/projects/">
+                Projects
+                
+              </a>
+          </li>
+          
+          
+          
+          
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+</header>
+
+
+    <!-- Content -->
+
+    <div class="container mt-5">
+      
+
+<div class="post">
+
+  <header class="post-header">
+    <h1 class="post-title">Graal VM and Truffle. Proof of concept with Tiger language</h1>
+    <p class="post-meta">August 30, 2018</p>
+  </header>
+
+  <article class="post-content">
+    <p>GraalVM serves as a universal virtual machine designed to run applications authored in various languages including JavaScript, Python 3, Ruby, R, JVM-based languages such as Java, Scala, Kotlin, and LLVM-based languages like C and C++. By eliminating the barriers between different programming languages, it facilitates seamless interoperability within a shared runtime. It’s versatile, capable of operating either standalone or within the context of OpenJDK, Node.js, Oracle Database, or MySQL. Simply put, GraalVM enhances the Java Virtual Machine at a fundamental level<a href="#bib1">[1]</a>. Interestingly, certain benchmarks have demonstrated that a basic implementation of the JavaScript Engine using GraalVM outperforms the Google V8 Engine<a href="#bib2">[2]</a>.</p>
+
+<p>As part of a proof of concept to examine execution time and memory usage in interpreting a custom language, we chose to write the target codes in Tiger. This language, primarily used in academic settings, is designed to challenge students’ abilities due to its inherent complexities. However, for the sake of simplicity and to streamline the proof of concept, we made minor modifications to the language’s original specification.</p>
+
+<h2 id="tiger-language-modification">Tiger language modification</h2>
+<p>To expedite the development process of the proof-of-concept, we’ve made alterations to the Tiger language specification, thereby simplifying it.</p>
+
+<p>Principal modifications:</p>
+
+<ul>
+  <li>
+    <p>This implementation does not have <strong>Record</strong> types, and then, there are not <strong>Record</strong> fields or <strong>Record</strong> field access</p>
+  </li>
+  <li>
+    <p>There is double type support <strong>(\d+\.\d+)</strong></p>
+  </li>
+  <li>There are only three builtin functions:</li>
+  <li>
+    <p><strong>print</strong> (print the String representation of the first argument):</p>
+
+    <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+</pre></td><td class="rouge-code"><pre> <span class="k">print</span><span class="p">(</span><span class="mi">19</span><span class="p">)</span>
+ <span class="o">&gt;</span> <span class="mi">19</span>
+</pre></td></tr></tbody></table></code></pre></div>    </div>
+
+    <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+</pre></td><td class="rouge-code"><pre> <span class="k">print</span><span class="p">(</span><span class="s">"hello world"</span><span class="p">)</span>
+ <span class="o">&gt;</span> <span class="n">hello</span> <span class="n">world</span>
+</pre></td></tr></tbody></table></code></pre></div>    </div>
+
+    <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+</pre></td><td class="rouge-code"><pre> <span class="k">print</span><span class="p">(</span><span class="n">nano_time</span><span class="p">())</span>
+ <span class="o">&gt;</span> <span class="p">...</span> 
+</pre></td></tr></tbody></table></code></pre></div>    </div>
+  </li>
+  <li><strong>nano_time</strong> (returns the <strong>System.nanoTime()</strong> Java function result)</li>
+  <li>
+    <p><strong>wait</strong> (Sleep the current thread by <strong>x</strong> milliseconds where <strong>x</strong> is the first argument)</p>
+  </li>
+  <li>
+    <p>There is no type of declaration or check. All types and values are created and assigned dynamically</p>
+  </li>
+  <li>There are no comment declarations</li>
+</ul>
+
+<h2 id="graal-vm-and-truffle">Graal VM and Truffle</h2>
+
+<p>The Truffle framework enhances the efficiency of running various programming languages on GraalVM. By automatically generating high-performance code from interpreters, it simplifies the process of language implementation. Truffle facilitates the straightforward conversion of custom ASTs into Graal AST nodes. Despite introducing another layer of abstraction, this API statically generates code through Java annotations, which eliminates additional code levels during the interpretation stage. Therefore, the final result consists solely of Graal code.</p>
+
+<h3 id="types">Types</h3>
+
+<p>Every language utilizes the abstraction of specific types, essentially grouping data by its characteristics. Even though some sources suggest certain languages lack types, this assertion isn’t entirely accurate. Consider the operation 2 + 2, which invariably yields the integer four - a numeric value that has been recognizable since time immemorial.</p>
+
+<p>Our interpretation of Tiger includes four primitive types in the interpretation stage.</p>
+
+<p>These are the types mapped using Java POO patterns definition:</p>
+
+<ul>
+  <li>Long: to represent integers from <code class="language-plaintext highlighter-rouge">-(2**64 - 1)</code> to <code class="language-plaintext highlighter-rouge">2**64</code></li>
+  <li>Double: to represent floating comma numbers with, 1 bit for sign, 11 bits for exponent and 52 bits for the fractional part.</li>
+  <li>Function: this is a custom function object implementation</li>
+  <li>Nil: every expression in Tiger returns to value, nil is the default one</li>
+</ul>
+
+<h3 id="parsing">Parsing</h3>
+
+<p>The parsing of Tiger script is facilitated by the ANTLR 4.0 framework, which generates a fundamental Abstract Syntax Tree (AST) to evaluate the script. While the initial approach to interpret the source code might involve visiting the obtained AST, the primary objective of this work is to explore and leverage the capabilities of Graal and Truffle.</p>
+
+<p>I utilize the previously generated AST to convert it into a Truffle tree. Most compiler implementations typically involve four key stages: 1 - Tokenization, 2 - Creation of a tree based on the grammar, 3 - Semantic analysis, and 4 - Code generation. The ANTLR framework is employed to accomplish the first two stages, while the latter two stages fall within the purview of Graal and Truffle.</p>
+
+<h3 id="variable-scope">Variable Scope</h3>
+
+<p>Variable and function scopes are structured in a parent-child tree format. Each scope inherently has a parent scope. When a variable is absent in the current scope, it triggers a search in the parent scope. This process continues up the tree until the variable is located, or if no parent scope remains. In the latter case, it throws a “The variable x is not defined” exception.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+</pre></td><td class="rouge-code"><pre> 
+ | a. 1 |
+ | b, "hello world" | &lt;-
+                        |
+                        | a, 10 |
+                        | z, 1000|
+ |c, 1 |
+ 
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<h3 id="performance">Performance</h3>
+
+<p>In dynamic languages, operations such as multiplication ‘*’, division ‘/’, or a less-than ‘&lt;’ comparison are often determined only at runtime. To achieve maximum performance, a language implementation should aim to prevent repetitive lookups for these operators with each operation.</p>
+
+<p>Initial observations from my approach to variable (read, write) and function lookups indicate substantial overhead in execution time, almost ten times that of the final execution result.</p>
+
+<h3 id="variable-lookup">Variable lookup</h3>
+
+<p>All variable and function arguments are stored in FrameSlots, which is the Truffle API’s method for value storage. I have implemented a strategy where every variable access (both read and write) has its address stored in its respective AST Node. This eliminates the need for traversing the Scope tree structure each time there is a read/write call. These variable context structures are constructed during the semantic analysis stage and written into the node as a Java field, allowing for O(1) access.</p>
+
+<p>The Truffle API offers options for reading and writing values that can effectively circumvent the need for boxing and unboxing these values. However, when passing arguments to a function call (corresponding to the Graal RootNode class), the values must be passed as Object values. One solution to this is to minimize the number of unboxing operations. The only instances of unboxing operations occur in the ReadArg node evaluation within the AST.</p>
+
+<h3 id="function-calls">Function calls</h3>
+
+<p>Truffle can assign function call arguments within a class named Frame, which is optimized for execution in Graal VM.</p>
+
+<p>Tiger language incorporates nested functions and argument scopes. Consequently, I introduced an extra argument in the Frame object passed to a function call.</p>
+
+<p>When passing arguments to a function call, I structure them as follows:</p>
+
+<ul>
+  <li>The first argument is the current branch Frame</li>
+  <li>Subsequent arguments consist of the evaluated expressions for the current Tiger function calle next arguments are the evaluated expressions for the current Tiger function call</li>
+</ul>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+</pre></td><td class="rouge-code"><pre> function a(n)=
+    let
+        function b(r)=
+            print(r + n) // to access the n value we have to access the first argument in the b call and then the frame argument of the scope
+        in
+    b(n)
+ end
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<h4 id="polymorphic-inline">Polymorphic Inline</h4>
+<p>Polymorphic inline caches are mechanisms that enhance the efficiency of function and property lookup in dynamic languages. These are typically implemented utilizing assembler code and code patching techniques.</p>
+
+<h3 id="tests">Tests</h3>
+
+<p>The <a href="https://github.com/smarr/Classic-Benchmarks/blob/master/benchmarks/Mandelbrot.java#L42ß">classic Mandelbrot benchmark</a> designed for Java was put to the test against <a href="https://github.com/Jacarte/tiger-Graal/src/tests/mandelbrot.tiger">a tailor-made Tiger Mandelbrot test<a>.</a></a></p>
+
+<h3 id="tests-results-and-remarks">Tests Results and remarks</h3>
+
+<p><img src="/assets/img/result.png" alt="alt results" /></p>
+
+<p>The findings from this comparison are quite promising. The noticeable divergence between the mean, maximum, and minimum execution time values is attributable to Graal VM’s ability to inline function calls and cache the most frequently used nodes (like Integer constants). As a result, initial calls experience significant delays, but this is a characteristic of Java run effects, as evidenced in the above figure.</p>
+
+<p><a href="https://github.com/Jacarte/tiger-Graal">Here</a> you can find the source code of this cool project.</p>
+
+<h2 id="future-research">Future research</h2>
+<ul>
+  <li>Tail call optimization:</li>
+</ul>
+
+<p>In related works <a href="http://cesquivias.github.io/blog/2015/01/15/writing-a-language-in-truffle-part-4-adding-features-the-truffle-way/">[3]</a> the author proposes to implement a Tail Call optimization showing very good results for recursive function calls</p>
+<ul>
+  <li>IGV profiling to detect operations time overloads and unexpected nodes construction</li>
+</ul>
+
+<h2 id="bibliography">Bibliography</h2>
+
+<ul>
+  <li><a href="https://www.GraalVM.org" id="bib1">GraalVM</a></li>
+  <li><a id="bib2" href="http://stefan-marr.de/papers/dls-marr-et-al-cross-language-compiler-benchmarking-are-we-fast-yet/">
+Cross-Language Compiler Benchmarking</a></li>
+</ul>
+
+  </article>
+
+  
+    <div id="disqus_thread"></div>
+    <script type="text/javascript">
+      var disqus_shortname  = 'jacarte-github-io';
+      var disqus_identifier = '/blog/2018/Graal-VM';
+      var disqus_title      = "Graal VM and Truffle. Proof of concept with Tiger language";
+      (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+      })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  
+
+</div>
+
+    </div>
+
+    <!-- Footer -->
+
+    
+<footer class="fixed-bottom">
+  <div class="container mt-0">
+    &copy; Copyright 2024 Javier  Cabrera Arteaga.
+    Powered by <a href="http://jekyllrb.com/" target="_blank">Jekyll</a> with <a href="https://github.com/alshedivat/al-folio">al-folio</a> theme. Hosted by <a href="https://pages.github.com/" target="_blank">GitHub Pages</a>.
+
+    
+  </div>
+</footer>
+
+
+
+  </body>
+
+  <!-- Load Core and Bootstrap JS -->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha512-/DXTXr6nQodMUiq+IUJYCt2PPOUjrHJ9wFrqpJ3XkgPNOZVfMok7cRw6CSxyCQxXn6ozlESsSh1/sMCTF1rL/g==" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.4.4/umd/popper.min.js" integrity="sha512-eUQ9hGdLjBjY3F41CScH3UX+4JDSI9zXeroz7hJ+RteoCaY+GP/LDoM8AO+Pt+DRFw3nXqsjh9Zsts8hnYv8/A==" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" integrity="sha512-M5KW3ztuIICmVIhjSqXe01oV2bpe248gOxqmlcYrEzAvws7Pw3z6BK0iGbrwvdrUQUhi3eXgtxp5I8PDo9YfjQ==" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mdbootstrap/4.19.1/js/mdb.min.js"  integrity="sha512-Mug9KHKmroQFMLm93zGrjhibM2z2Obg9l6qFG2qKjXEXkMp/VDkI4uju9m4QKPjWSwQ6O2qzZEnJDEeCw0Blcw==" crossorigin="anonymous"></script>
+
+<!-- Load Common JS -->
+<script src="/assets/js/common.js"></script>
+
+<!-- Code Syntax Highlighting -->
+<link rel="stylesheet" href="https://gitcdn.link/repo/jwarby/jekyll-pygments-themes/master/.css" />
+
+
+<!-- Load KaTeX -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/katex.min.css" integrity="sha512-h7nl+xz8wgDlNM4NqKEM4F1NkIRS17M9+uJwIGwuo8vGqIl4BhuCKdxjWEINm+xyrUjNCnK5dCrhM0sj+wTIXw==" crossorigin="anonymous" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/katex.min.js" integrity="sha512-/CMIhXiDA3m2c9kzRyd97MTb3MC6OVnx4TElQ7fkkoRghwDf6gi41gaT1PwF270W6+J60uTmwgeRpNpJdRV6sg==" crossorigin="anonymous"></script>
+<script src="/assets/js/katex.js"></script>
+
+
+
+<!-- Load Mansory & imagesLoaded -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/masonry/4.2.2/masonry.pkgd.min.js" integrity="" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/imagesloaded@4/imagesloaded.pkgd.min.js"></script>
+
+<!-- Project Cards Layout -->
+<script type="text/javascript">
+  // Init Masonry
+  var $grid = $('.grid').masonry({
+    gutter: 10,
+    horizontalOrder: true,
+    itemSelector: '.grid-item',
+  });
+  // layout Masonry after each image loads
+  $grid.imagesLoaded().progress( function() {
+    $grid.masonry('layout');
+  });
+</script>
+
+
+
+<!-- Enable Tooltips -->
+<script type="text/javascript">
+$(function () {
+  $('[data-toggle="tooltip"]').tooltip()
+})
+</script>
+
+
+
+<!-- Google Analytics -->
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-127898106-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+</html>

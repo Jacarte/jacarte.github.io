@@ -6,8 +6,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 
-<title>Javier  Cabrera Arteaga | blank</title>
-<meta name="description" content="">
+<title>Javier  Cabrera Arteaga | Obfuscation experiment for some cryptominers.</title>
+<meta name="description" content="We use wasm-mutate to generate a 18877 variants from a seed cryptominer. The generated "population" has a particular property, all behave equally. When a Wasm variant is executed, it then returns the same result as the original program.
+">
 
 <!-- Bootstrap & MDB -->
 <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet" integrity="sha512-MoRNloxbStBcD8z3M/2BmnT+rg4IsMxPkXaGh2zD6LGNNFE80W3onsAhRcMAMrSoyWL9xD7Ert0men7vR8LUZg==" crossorigin="anonymous">
@@ -22,16 +23,18 @@
 <link rel="shortcut icon" href="/assets/img/favicon.ico">
 <link rel="stylesheet" href="/assets/css/main.css">
 
-<link rel="canonical" href="/blog/">
+<link rel="canonical" href="/blog/2021/LazyTown/">
 
 <!-- Open Graph -->
 
 <meta property="og:site_name" content="Personal blog
+We use wasm-mutate to generate a 18877 variants from a seed cryptominer. The generated "population" has a particular property, all behave equally. When a Wasm variant is executed, it then returns the same result as the original program.
 " />
 <meta property="og:type" content="object" />
-<meta property="og:title" content="blank" />
-<meta property="og:url" content="/blog/index.html" />
-<meta name="description" property="og:description" content="" />
+<meta property="og:title" content="Obfuscation experiment for some cryptominers." />
+<meta property="og:url" content="/blog/2021/LazyTown/" />
+<meta name="description" property="og:description" content="We use wasm-mutate to generate a 18877 variants from a seed cryptominer. The generated "population" has a particular property, all behave equally. When a Wasm variant is executed, it then returns the same result as the original program.
+" />
 <meta name="author" content="Javier Cabrera-Arteaga">
 <meta name="image" property="og:image" content="" />
 
@@ -137,71 +140,93 @@
     <!-- Content -->
 
     <div class="container mt-5">
-      <div class="post">
+      
 
-  <div class="header-bar">
-    <h1>Small ideas</h1>
-    <h2>Small ideas and experiences on Software Engineering and Computer Science</h2>
-  </div>
+<div class="post">
 
+  <header class="post-header">
+    <h1 class="post-title">Obfuscation experiment for some cryptominers.</h1>
+    <p class="post-meta">December 15, 2021</p>
+  </header>
 
-  <ul class="post-list">
-    
-      <li>
-        <h3><a class="post-title" href="/blog/2023/ONNx/">Porting your ML model as an onnxruntime WebAssembly application (pseudo-tutorial)</a></h3>
-        <p class="post-meta">December 6, 2023</p>
-        <p>I ported a keras ML model to a fully isolated inferring application in WebAssembly. It runs completely in the browser. To do so, I use Emscripten, the onnxruntime and a few lines of Rust code.
-</p>
-      </li>
-    
-      <li>
-        <h3><a class="post-title" href="/blog/2023/WasmtimeAndIntelPIN/">wasmtime, IntelPIN and a lot of traces</a></h3>
-        <p class="post-meta">July 13, 2023</p>
-        <p>I use IntelPIN and wasmtime to trace only Wasm instructions for a wasmtime execution.
-</p>
-      </li>
-    
-      <li>
-        <h3><a class="post-title" href="/blog/2021/LazyTown/">Obfuscation experiment for some cryptominers.</a></h3>
-        <p class="post-meta">December 15, 2021</p>
-        <p>We use wasm-mutate to generate a 18877 variants from a seed cryptominer. The generated "population" has a particular property, all behave equally. When a Wasm variant is executed, it then returns the same result as the original program.
-</p>
-      </li>
-    
-      <li>
-        <h3><a class="post-title" href="/blog/2021/HandMadeWasmDeploInFastly/">How to deploy hand made Wasm code in Fastly Compute@Edge.</a></h3>
-        <p class="post-meta">January 11, 2021</p>
-        <p>How to deploy your first Fastly's Compute@Edge service ? How to deploy custom Wasm to it ? ... and a little bit of metaprogramming with Rust.</p>
-      </li>
-    
-      <li>
-        <h3><a class="post-title" href="/blog/2020/SurveyOnFuzzing/">Fuzzing Survey.</a></h3>
-        <p class="post-meta">September 17, 2020</p>
-        <p>Fuzzing is an automated technique for software testing. I will try to put in this blog entry some of the basics ideas about fuzzing, as well as pros and cons of some fuzzers and techniques to face specific issues.</p>
-      </li>
-    
-      <li>
-        <h3><a class="post-title" href="/blog/2019/NonIntrusiveJSFunctionCoverage/">A non intrusive JS code analysis.</a></h3>
-        <p class="post-meta">March 21, 2019</p>
-        <p>Making a function coverage tool for JS using Graal-JS source code modification.</p>
-      </li>
-    
-      <li>
-        <h3><a class="post-title" href="/blog/2018/Java-Flames/">Java in Flames. Profiler results</a></h3>
-        <p class="post-meta">October 20, 2018</p>
-        <p>We show the results and analysis of integrating linux-perf-tool to our perturbation instrumentation. The use of java flames graph provide a better visual performance. Also, We explain our instrumentation workflow.</p>
-      </li>
-    
-      <li>
-        <h3><a class="post-title" href="/blog/2018/Graal-VM/">Graal VM and Truffle. Proof of concept with Tiger language</a></h3>
-        <p class="post-meta">August 30, 2018</p>
-        <p>Graal VM group some languages in one polyglot compiler that runs in Java Virtual Machine. This work has proved the performance in that VM of a custom academic language called Tiger using the Truffle API.</p>
-      </li>
-    
-  </ul>
+  <article class="post-content">
+    <h1 id="the-cryptominer">The cryptominer</h1>
+
+<p>We used the Wasm cryptominer from bitcoinpeople.online.wasm and subjected it to wasm-mutate for a duration of 1 hour, resulting in 18,877 variations from the original program. The mutation process is wholly random. Given that each newly generated variant serves as the seed for the subsequent one, wasm-mutate progressively mutates the original cryptominer. After each binary is generated, we construct a square image, translating each byte in the binary into a grayscale value ranging from 0 to 255. Let’s examine the outcome.</p>
+
+<div class="samples">
+    <div class="sample">
+        Original cryptominer.
+        <img src="/assets/img/crypto/mutated.0.wasm.png" />
+    </div>
+
+    <div class="sample">
+        1000 rotations after
+        <img src="/assets/img/crypto/mutated.1000.wasm.png" />
+    </div>
+    <div class="sample">
+        10000 rotations after
+        <img src="/assets/img/crypto/mutated.10000.wasm.png" />
+    </div>
+    <div class="sample">
+        18000 rotations after
+        <img src="/assets/img/crypto/mutated.18870.wasm.png" />
+    </div>
+</div>
+
+<h1 id="another-target">Another target</h1>
+
+<p>We did the same for a Wasm binary that we knew was not a crypto miner. Check the
+results.</p>
+
+<div class="samples">
+    <div class="sample">
+        Original binary.
+        <img src="/assets/img/crypto2/mutated.0.wasm.png" />
+    </div>
+
+    <div class="sample">
+        1000 rotations after
+        <img src="/assets/img/crypto2/mutated.1000.wasm.png" />
+    </div>
+    <div class="sample">
+        10000 rotations after
+        <img src="/assets/img/crypto2/mutated.10000.wasm.png" />
+    </div>
+    <div class="sample">
+        18000 rotations after
+        <img src="/assets/img/crypto2/mutated.18000.wasm.png" />
+    </div>
+</div>
+
+<h1 id="some-preliminary-conclusions">Some preliminary conclusions</h1>
+
+<h2 id="denoising">Denoising</h2>
+
+<p>Adhering to the algorithm suggested in the MINOS study [?], we “reshaped” all images into 100x100 square pictures. This action represents the initial step in transforming Wasm binaries into images. We streamlined the succeeding steps of MINOS to enable a preliminary and manual evaluation of our obfuscation method.</p>
+
+<p>We have noticed two phenomena. Firstly, following multiple iterations, the images derived from wasm-mutate variants begin to converge pixel values, implying that during the image conversion process, a cluster of pixels gets approximated to a single color value. This suggests that any two Wasm files, whether crypto-related or not, could be convoluted into the same image.</p>
+
+<p>Secondly, we created two variant populations for two distinct binaries. Within these populations, we discovered pairs of variants (with one variant from the cryptominer and another from a non-crypto program) that closely resembled each other in terms of their imaging. This suggests that our method can effectively fool the human eye. We are presently replicating the classifier’s implementation to verify if wasm-mutate can indeed generate malware undetected by contemporary defenses.</p>
+
+<p>Our final conjecture is that malware classifiers based on the “imaging” of Wasm binaries can be circumvented with the appropriate obfuscation process.</p>
+
+  </article>
 
   
-
+    <div id="disqus_thread"></div>
+    <script type="text/javascript">
+      var disqus_shortname  = 'jacarte-github-io';
+      var disqus_identifier = '/blog/2021/LazyTown';
+      var disqus_title      = "Obfuscation experiment for some cryptominers.";
+      (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+      })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  
 
 </div>
 

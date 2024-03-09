@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+<title>Javier  Cabrera Arteaga | Fuzzing Survey.</title>
+<meta name="description" content="Fuzzing is an automated technique for software testing. I will try to put in this blog entry some of the basics ideas about fuzzing, as well as pros and cons of some fuzzers and techniques to face specific issues.">
+
+<!-- Bootstrap & MDB -->
+<link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet" integrity="sha512-MoRNloxbStBcD8z3M/2BmnT+rg4IsMxPkXaGh2zD6LGNNFE80W3onsAhRcMAMrSoyWL9xD7Ert0men7vR8LUZg==" crossorigin="anonymous">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mdbootstrap/4.19.1/css/mdb.min.css" integrity="sha512-RO38pBRxYH3SoOprtPTD86JFOclM51/XTIdEPh5j8sj4tp8jmQIx26twG52UaLi//hQldfrh7e51WzP9wuP32Q==" crossorigin="anonymous" />
+
+<!-- Fonts & Icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css"  integrity="sha512-1PKOgIY59xJ8Co8+NE6FZ+LOAZKjy+KY8iq0G4B3CyeY6wYHN3yt9PW0XpSriVlkMXe40PTKnXrLnZ9+fkDaog==" crossorigin="anonymous">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/academicons/1.9.0/css/academicons.min.css" integrity="sha512-W4yqoT1+8NLkinBLBZko+dFB2ZbHsYLDdr50VElllRcNt2Q4/GSs6u71UHKxB7S6JEMCp5Ve4xjh3eGQl/HRvg==" crossorigin="anonymous">
+<link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Roboto+Slab:100,300,400,500,700|Material+Icons">
+
+<!-- Styles -->
+<link rel="shortcut icon" href="/assets/img/favicon.ico">
+<link rel="stylesheet" href="/assets/css/main.css">
+
+<link rel="canonical" href="/blog/2020/SurveyOnFuzzing/">
+
+<!-- Open Graph -->
+
+<meta property="og:site_name" content="Personal blog
+Fuzzing is an automated technique for software testing. I will try to put in this blog entry some of the basics ideas about fuzzing, as well as pros and cons of some fuzzers and techniques to face specific issues." />
+<meta property="og:type" content="object" />
+<meta property="og:title" content="Fuzzing Survey." />
+<meta property="og:url" content="/blog/2020/SurveyOnFuzzing/" />
+<meta name="description" property="og:description" content="Fuzzing is an automated technique for software testing. I will try to put in this blog entry some of the basics ideas about fuzzing, as well as pros and cons of some fuzzers and techniques to face specific issues." />
+<meta name="author" content="Javier Cabrera-Arteaga">
+<meta name="image" property="og:image" content="virus.png" />
+
+
+  </head>
+
+  <body class="fixed-top-nav ">
+
+    <!-- Header -->
+
+    <header>
+
+    <!-- Nav Bar -->
+    <nav id="navbar" class="navbar navbar-light bg-white navbar-expand-sm fixed-top">
+    <div class="container">
+      
+      <a class="navbar-brand title font-weight-lighter" href="/">
+       <span class="font-weight-bold">Javier</span>   Cabrera Arteaga PhD 
+      </a>
+      
+      <!-- Navbar Toogle -->
+      <button class="navbar-toggler collapsed ml-auto" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar top-bar"></span>
+        <span class="icon-bar middle-bar"></span>
+        <span class="icon-bar bottom-bar"></span>
+      </button>
+      <div class="collapse navbar-collapse text-right" id="navbarNav">
+        <ul class="navbar-nav ml-auto flex-nowrap">
+          <!-- About -->
+          <li class="nav-item ">
+            <a class="nav-link" href="/">
+              About
+              
+            </a>
+          </li>
+          
+          <!-- Blog -->
+          <li class="nav-item active">
+            <a class="nav-link" href="/blog/">
+              Blog
+              
+            </a>
+          </li>
+          
+          <!-- Other pages -->
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          <li class="nav-item ">
+              <a class="nav-link" href="/cv/">
+                CV
+                
+              </a>
+          </li>
+          
+          
+          
+          <li class="nav-item ">
+              <a class="nav-link" href="/thesis/">
+                Lic Thesis
+                
+              </a>
+          </li>
+          
+          
+          
+          
+          
+          <li class="nav-item ">
+              <a class="nav-link" href="/pthesis/">
+                PhD Thesis
+                
+              </a>
+          </li>
+          
+          
+          
+          <li class="nav-item ">
+              <a class="nav-link" href="/projects/">
+                Projects
+                
+              </a>
+          </li>
+          
+          
+          
+          
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+</header>
+
+
+    <!-- Content -->
+
+    <div class="container mt-5">
+      
+
+<div class="post">
+
+  <header class="post-header">
+    <h1 class="post-title">Fuzzing Survey.</h1>
+    <p class="post-meta">September 17, 2020</p>
+  </header>
+
+  <article class="post-content">
+    <p>Fuzzing is an automated methodology for testing software. In this blog post, I’ll present some fundamental concepts of fuzzing, including the advantages and disadvantages of various fuzzers and strategies for addressing particular issues.</p>
+
+<p>Let’s examine some scholarly definitions to clarify what fuzzing entails:</p>
+
+<ul>
+  <li>
+    <p>Fuzzing is an extremely automated testing approach that addresses numerous boundary cases by employing invalid data (sourced from files, network protocols, API calls, etc.) as application input to effectively ensure the non-existence of exploitable vulnerabilities. It originates from modern applications’ tendency to malfunction due to random input generated by line noise on “fuzzy” telephone lines - as defined by Oehlert.</p>
+  </li>
+  <li>
+    <p>Fuzzing aims exclusively at crashing the system. It involves instigating a range of inputs with the intention of detecting any reliability or robustness deficiencies in the software - as stated in Fuzzing for Software Security Testing and Quality Assurance.</p>
+  </li>
+</ul>
+
+<p>In essence, fuzzing is a form of negative testing. Its main objective is to inundate the program’s input with a stream of data (which could be intelligently random or not) in order to identify failures or potentially exploitable issues within the program’s code. The crux of the matter lies in disseminating this data through different communication interfaces in the program.</p>
+
+<p>Fuzzing should not be viewed as a substitute for code auditing, reverse engineering, or other software quality assurance practices. It’s crucial to mention that no single technique provides a fail-safe solution for bug detection. However, studies [1] suggest that fuzzing leads to failure in 80% of tested code, paving the way for subsequent rectification.</p>
+
+<h2 id="brief-history">Brief History</h2>
+
+<p>Fuzzing was first born out of the more affordable, and curious, world of randomness.</p>
+
+<ul>
+  <li><strong>1983</strong>: The monkey</li>
+  <li><strong>1988</strong>: The internet Worm</li>
+  <li><strong>1989 - 1991</strong>:
+    <ul>
+      <li>Boris Beizer explains Syntax Testing (similar to robustness testing).</li>
+      <li>“Fuzz: An Empirical Study of Reliability . . .” by Miller et al. (Univ. of Wisconsin)</li>
+    </ul>
+  </li>
+  <li><strong>1995-1996</strong>:
+    <ul>
+      <li>Fuzz revisited by Miller et al. (Univ. of Wisconsin).</li>
+      <li>Fault Injection of Solaris by OUSPG (Oulu University, Finland).</li>
+    </ul>
+  </li>
+  <li><strong>1998</strong>: ISIC fuzzer for IPv4</li>
+  <li><strong>1999-2001</strong>:
+    <ul>
+      <li>PROTOS tests for: SNMP, HTTP, SIP, H.323, LDAP, WAP, . . .</li>
+      <li>Peach fuzzer from Michael Eddington, the most popular fuzzing framework still in use</li>
+      <li>Spike from Dave Aitel</li>
+    </ul>
+  </li>
+  <li><strong>2002</strong>:
+    <ul>
+      <li>Codenomicon launch with GTP, SIP, and TLS robustness testers.</li>
+      <li>Click-to-Secure (now Cenzic) Hailstorm web application tester.</li>
+      <li>IWL and SimpleSoft SNMP fuzzers (and various other protocol specific tools).</li>
+      <li>SSHredder from Rapid7</li>
+    </ul>
+  </li>
+  <li><strong>2003</strong>:
+    <ul>
+      <li>Open source fuzzers: dfuz, Flayer, Scapy</li>
+    </ul>
+  </li>
+  <li><strong>2005–2006</strong>:
+    <ul>
+      <li>Open source fuzzers: antiparser, autodafe, AxMan, GPF, JBroFuzz, WSFuzzer</li>
+      <li>Commercial fuzzers: beStorm from Beyond Security, Flinder from SEARCHLAB, Mu-4000 from MuSecurity (now Spirent)</li>
+      <li>Exploratory fuzzing, EFS from Jared DeMott, using feedback loop from code execution to craft new test sequences</li>
+    </ul>
+  </li>
+  <li><strong>2007</strong>:
+    <ul>
+      <li>Open source fuzzers: ProxyFuzz</li>
+      <li>Commercial: FuzzGuru from Microsoft, Achilles from Wurldtech (now GE),
+BPS-1000 from BreakingPoint, (now Ixia)</li>
+      <li>SAGE from Microsoft Research and CSE, using constraint solvers and
+coverage data to generate new tests</li>
+      <li>KIF fuzzer explores state diagrams, by Humberto Abdelnur, Olivier Festor,
+and Radu State</li>
+      <li>In-Memory Fuzz POC by Adam Greene, Michael Sutton and Pedram Amini,
+applying mutations inside the process</li>
+    </ul>
+  </li>
+  <li><strong>2008</strong>:
+    <ul>
+      <li>Sulley from Aaron Portnoy and Pedram Amini</li>
+      <li>Defensics 3.0 from Codenomicon</li>
+    </ul>
+  </li>
+  <li><strong>2009</strong>:
+    <ul>
+      <li>Traffic Capture Fuzzer from Codenomicon uses protocol dissectors to model protocols</li>
+    </ul>
+  </li>
+  <li><strong>2010</strong>:
+    <ul>
+      <li>Radamsa from OUSPG using genetic algorithms to dissect protocols and build protocol models</li>
+    </ul>
+  </li>
+  <li><strong>2014</strong>:
+    <ul>
+      <li>AFL by Michal Zalewski, using compile-time instrumentation and genetic algorithms to discover new paths in code</li>
+    </ul>
+  </li>
+  <li><strong>2015</strong>:
+    <ul>
+      <li>LLVM libFuzzer, in-process coverage guided fuzzer using Sanitizer Coverage instrumentation</li>
+    </ul>
+  </li>
+  <li><strong>2016</strong>:
+    <ul>
+      <li>Microsoft announces SAGE based fuzzing service, Project Springfield</li>
+      <li>Google announces open source software fuzzing project, OSS-fuzz</li>
+    </ul>
+  </li>
+</ul>
+
+<h3 id="classification">Classification</h3>
+
+<p>This is somehow difficult because no one group perfectly agrees on the definitions related to fuzzing. Here are the main three categories for fuzzings.</p>
+
+<ul>
+  <li>
+    <p>A black box fuzzer tends to focus on final requirements, system stability, and exposed interfaces. The interfaces
+to a system can consist of, for example: User interfaces: GUI, command line; Network protocols; Data structures such as files; System APIs such as system calls and device drivers (how to detect the input interface? Lets see this later). These kind of fuzzers executes the program as a functional abstraction. As a good thing, they compile the real code for a real environment, but the search gets difficult to explore due to infinite space measurement.</p>
+  </li>
+  <li>
+    <p>With a white box fuzzer, the full access to the source code is granted. Usually, this fuzzers are coverage based. Then the program is instrumented specific coverage instructions, having a third-party player listening for feedbacks, for example AFL (take a look to Kelinci). This is the only way to get 100% of coverage, even when some black-box techniques gets a very good accuracy</p>
+  </li>
+  <li>
+    <p>A gray box fuzzer combines some things of the previous classifications. An approach could be to implement a testing interface in the final application binary to be used by the fuzzer with some builtin feedbacks in the code. It uses the internals of the software to assist in the design of the tests of the external interfaces.  In some cases, grammars are used to generate the well-formed inputs</p>
+  </li>
+</ul>
+
+<h3 id="fuzzer-input-methods">Fuzzer input methods</h3>
+
+<p>The heart and soul of a fuzzer is its ability to create good inputs.</p>
+
+<ul>
+  <li>Generation
+    <ul>
+      <li>Generation-based fuzzers do not require any valid test cases. Instead, this type of fuzzer already understands the underlying protocol or input format. They can generate inputs based purely on this knowledge.
+A drawback of these solutions is if you are interested in testing an obscure or proprietary format, the fuzzer may not be preprogrammed to understand it.</li>
+    </ul>
+  </li>
+  <li>Mutation
+    <ul>
+      <li>This method consists of first gathering valid inputs to the system and then adding anomalies to
+these inputs. These valid inputs may consist of a network packet capture or valid files or command line arguments, to name a few. There are a variety of ways to add anomalies to these inputs. They may be added randomly, ignoring any structure available in the inputs. These types of fuzzers work on the general principle: start from valid inputs and add a number of anomalies to the inputs to generate fuzzed inputs.</li>
+    </ul>
+  </li>
+  <li>Pure random stream generators
+    <ul>
+      <li>This is a low speed option, for instance, the then branch of the conditional statement “if (x==10) then” has only one in \(2ˆ32\) chances of being exercised if x is a randomly chosen 32-bit input value, but, in the security context, these limitations mean that potentially serious security bugs, such as buffer overflows, may be missed because the code that contains the bug is not even exercised. In practice, time constraints limit the effectiveness of this approach. The result is, that due to its simplicity, this approach is unlikely to yield any significant results.</li>
+    </ul>
+  </li>
+</ul>
+
+<h3 id="how-to-create-a-fuzzer">How to create a fuzzer?</h3>
+
+<p>We can follow the pseudo-code below to construct a fuzzer</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+</pre></td><td class="rouge-code"><pre>Input: Seed Corpus S
+  repeat
+    s <span class="o">=</span> ChooseNext<span class="o">(</span>S<span class="o">)</span> // Search strategy
+    p <span class="o">=</span> AssignEnergy<span class="o">(</span>s<span class="o">)</span> // Power schedule <span class="o">(</span>How much to use the choosen seed?<span class="o">)</span>
+
+    <span class="k">for </span>i <span class="o">=</span> 1 to p
+      s1 <span class="o">=</span> MUTATE_INPUT<span class="o">(</span>s<span class="o">)</span>
+      <span class="k">if </span>s1 crashes <span class="k">then
+        </span>add s1 to Sx
+      <span class="k">else if </span>isInteresting<span class="o">(</span>s1<span class="o">)</span>
+        add s1 to S
+  <span class="k">until </span><span class="nb">timeout </span>reached or abort-signal
+Output: Crashing Inputs Sx
+</pre></td></tr></tbody></table></code></pre></div></div>
+
+<p>The algorithm has four important pieces:</p>
+<ul>
+  <li>How to choose a good seed ?</li>
+  <li>How many times should be mutated the seed ?</li>
+  <li>How mutate a seed candidate ?</li>
+  <li>Which of the new generated/mutated is a good candidate for new seed ?</li>
+</ul>
+
+<p>It is the same structure of a basic/literature genetic algorithm. <a href="#12">[12]</a> and <a href="#13">[13]</a> shows very encouraging results making changes in those cornerstones listed above.</p>
+
+<h3 id="some-available-fuzzers">Some available fuzzers</h3>
+
+<p>Modern fuzzers do not just focus solely on test generation. Fuzzers contain different functionalities and features that will help in both test automation and in failure identification.</p>
+
+<p><strong>* Some of the tools listed below aren’t available for free.</strong></p>
+
+<ul>
+  <li>
+    <p><a href="" target="_blank">[<strong>GPF</strong>]</a> GPF is an open source fuzzer. It is mutation-based network fuzzer that can fuzz server or client applications. GPF parses the packets and attempts to add the anomalies in as intelligent way as possible. It does this through the use if tokAids (implemented by writing C parsing code and compiling it direcly into GPF). GPF does not have any monitoring of analysis features.</p>
+  </li>
+  <li>
+    <p><a href="https://sourceforge.net/projects/taof/" target="_blank">[<strong>TAOF</strong>]</a> The Art of Fuzzing is an open-source, mutation-based, network fuzzer written un Python. It works from an initial packet capture. TAOF captures packets between the client and the server by acting as a man-in-the-middle. It does know any of the protocols, instead it presents the packets to the user ina GUI, and user must dissect the packets and inform TAOF of the packet structure, including length fields. One dawback of TAOF is that in its current implementation, it cannot handle length fields within another length field, resulting in many missed protocols to fuzz. TAOF does not have any monitoring or analysis features.</p>
+  </li>
+  <li>
+    <p><a href="https://github.com/SECFORCE/proxyfuzz" target="_blank">[<strong>ProxyFuzz</strong>]</a> ProxyFuzz is a man-in-the-middle non-deterministic network fuzzer written in Python. In other words, is exactly what it claims , a proxy server that fuzzes traffic. ProxyFuzz randomly changes (fuzzes) contents on the network traffic. It supports TCP and UDP protocols and can also be configured to fuzz only one side of the communication. ProxyFuzz is protocol agnostic so it can randomly fuzz any network communication. ProxyFuzz is a good tool for quickly testing network protocols and provide with basic proof of concepts. (<strong>Not changed since 2017</strong>)</p>
+  </li>
+  <li>
+    <p><a href="https://www.spirent.com" target="_blank"><strong>*</strong>[<strong>Mu-4000</strong>]</a> The Mu-4000 is an appliance-based fuzzer from Mu Dynamics (Spirent Communications Inc). It is a generation-based fuzzer understanding 55 different protocols at the moment.  It is placed on the same network as the target system and configured and controlled via a Web browser. Within the protocols that it understands, it is extremely easy to use and is highly configurable. Options such as which test cases are sent at which timing periods can be precisely controlled. Furthermore, the Mu-4000 can be used as a pure proxy to send test cases from other fuzzers in order to use its monitoring functions, but otherwise cannot learn or be taught new or proprietary protocols. The Mu-4000 can only be used against protocols it understands. Another drawback is that, the Mu-4000 can only be used to fuzz servers and cannot fuzz client-side applications.</p>
+  </li>
+  <li>
+    <p><a target="_blank" href="https://www.owasp.org/images/5/5b/OWASP_IL_7_FuzzGuru.pdf">[<strong>FuzzGuru</strong>]</a>Designed for Windows. It has a GUI and scriptable automation triggering. C++, C# and Java can be fuzzed if it processes data from unstrusted source. As a drawback, if a bug happens when two independently fields are malformed, FuzzGuru will not find it</p>
+  </li>
+  <li>
+    <p><a href="https://www.ge.com/digital/applications"><strong>*</strong>[<strong>Achilles</strong>]</a>The Achilles project was a success and Wurldtech Security Technologies emerged as the leading provider of security solutions to SCADA, process control, and mission-critical industries, and the first company to offer a comprehensive suite of products and services designed specifically to protect the systems and networks that operate the foundation of the world’s critical infrastructure.</p>
+  </li>
+  <li>
+    <p><a href="https://www.synopsys.com/software-integrity/security-testing/fuzz-testing.html">[<strong>Defensics 3.0</strong>]</a>Defensics is a generation-based fuzzer from Codenomicon Ltd.It had support for over 130 protocols. As is the case with the Mu-4000, it had no ability to fuzz any protocols for which it does not already have support. It can be used to fuzz servers, clients, and even applications that process files. It is executed and controlled through a graphical Java application.
+Defensics can be configured to send a valid input between fuzzed inputs and compare the response to those in the past. In this way it can detect some critical behavioral faults such as the Heartbleed bug where the SUT replied with memory contents when fuzzed. It can also run custom external monitoring scripts. However, at the time of the analysis it didn’t have any built-in monitoring or analysis features.</p>
+  </li>
+  <li>
+    <p><a href="https://www.beyondsecurity.com/bestorm.html" target="_blank">[<strong>beSTORM</strong>]</a>beSTORM from Beyond Security is another commercial fuzzer that can handle network or file fuzzing.It contained support for almost 50 protocols. However, unlike the other commercial offerings, it could be used for fuzzing of proprietary and unsupported protocols. A network packet capture, or in the case of file fuzzing, a file, is loaded into beSTORM. This valid file can then be manually dissected. Alternatively, beSTORM has the ability to automatically analyze the valid file and determine significant occurrences such as length fields, ASCII text, and delimiters. Once the unknown protocol is understood by beSTORM, it then fuzzes it using a large library of heuristics. beSTORM also supports the ability to describe a protocol specification completely in XML.</p>
+  </li>
+  <li>
+    <p><a href="https://github.com/mirrorer/afl" target="_blank"><span style="color:green">[<strong>AFL</strong>]</span></a>American fuzzy lop is a security-oriented fuzzer that employs a novel type of compile-time instrumentation and genetic algorithms to automatically discover clean, interesting test cases that trigger new internal states in the targeted binary. This substantially improves the functional coverage for the fuzzed code. The compact synthesized corpora produced by the tool are also useful for seeding other, more labor- or resource-intensive testing regimes down the road. Compared to other instrumented fuzzers, afl-fuzz is designed to be practical: it has modest performance overhead, uses a variety of highly effective fuzzing strategies and effort minimization tricks, requires essentially no configuration, and seamlessly handles complex, real-world use cases - say, common image parsing or file compression libraries.</p>
+  </li>
+  <li>
+    <p><a href="https://github.com/isstac/kelinci" target="_blank">[<strong>Kelinci</strong>]</a>Kelinci is one of the first AFL for Java implementations and is very promising, although the approach with having two processes per fuzzing instance is a little clumsy and can get confusing. One process is the native C side, which takes mutated inputs produced by AFL and sends them to the second process via TCP socket. The second process is the Java process that feeds the input to the target program and sends back the code paths taken with this input. There are certain error messages in the Java part of this fuzzer that are not always exactly clear (at least to me), but they seem to indicate that the fuzzer is not running in a healthy state anymore. However, so far Kelinci worked very well for me and came up with a lot of results.</p>
+  </li>
+  <li>
+    <p><a href="https://github.com/googleprojectzero/winafl">[<strong>WINAFL</strong>]</a>Instead of instrumenting the code at compilation time, WinAFL relies on dynamic instrumentation using DynamoRIO (<a href="http://dynamorio.org">http://dynamorio.org/)</a> to measure and extract target coverage. This approach has been found to introduce an overhead about 2x compared to the native execution speed, which is comparable to the original AFL in binary instrumentation mode. WinAFL has been successfully used to identify bugs in Windows software</p>
+  </li>
+  <li>
+    <p><a href="http://llvm.org/docs/LibFuzzer.html" target="_blank">[<strong>LibFuzzer</strong>]</a>LibFuzzer (<a href="https://github.com/llvm-mirror/llvm" target="_blank">LLVM</a>) is linked with the library under test, and feeds fuzzed inputs to the library via a specific fuzzing entrypoint (“target function”); the fuzzer then tracks which areas of the code are reached, and generates mutations on the corpus of input data in order to maximize the code coverage. The code coverage information for libFuzzer is provided by LLVM’s SanitizerCoverage instrumentation.</p>
+  </li>
+  <li>
+    <p><a href="https://www.ee.oulu.fi/research/ouspg/Protos" target="_blank">[<strong>PROTOS</strong>]</a>The PROTOS project researchs different approaches of testing implementations of protocols using black-box (i.e. functional) testing methods. The goal is to support pro-active elimination of faults with information security implications. Awareness in these issues is promoted. Methods are developed to support customer driven evaluation and acceptance testing of implementations. Improving the security robustness of products is attempted through supporting the development process.</p>
+  </li>
+</ul>
+
+<p>AFL is the the most successful vulnerability detection tool to date. Many researchers had been forking the source code to improve the tool performance. Some examples are listed below:</p>
+
+<ul>
+  <li><a href="https://github.com/mboehme/aflfast" target="_blank">[<strong>AFLFast</strong>]</a> It is an AFL project fork, authors change the amount of fuzz that is generated for input and the order to pick a mutated seed from the generated input list. In other words, the tool uses the same number of inputs with a better distribution to maximize the coverage of tests. The preliminary results of the tool/paper launch show that this modification found 19x faster than AFL (on average). <a href="https://mboehme.github.io/paper/CCS16.pdf" target="_blank"><em>Coverage-based greybox Fuzzing as Markov Chain</em></a> was tested using GNU Binutils, finding more crashes than AFL.</li>
+  <li><a href="https://github.com/aflgo/aflgo" target="_blank">[<strong>AFLGo</strong>]</a> Given a set of target locations (e.g., folder/file.c:582), AFLGo generates inputs specifically with the objective to exercise these target locations.</li>
+  <li><a href="https://github.com/aflsmart/aflsmart" target="_blank">[<strong>AFLSmart</strong>]</a>AFLSmart is a smart (input-structure aware) greybox fuzzer which leverages a high-level structural representation of the seed files to generate new files. It uses higher-order mutation operators that work on the virtual file structure rather than on the bit level which allows AFLSmart to explore completely new input domains while maintaining file validity. It uses a novel validity-based power schedule that enables AFLSmart to spend more time generating files that are more likely to pass the parsing stage of the program, which can expose vulnerabilities much deeper in the processing logic. <a href="#13">[13]</a></li>
+</ul>
+
+<h3 id="what-about-languages">What about languages?</h3>
+
+<p>The choice of programming language also has an impact on the likelihood of vulnerabilities. Newer programming languages often make a considerable effort to prevent developers accidentally introducing vulnerabilities. For example, compiled C programs do not automatically perform bounds checking at runtime whereas Python, Ruby, C# or Java programs all do.</p>
+
+<p><strong>Why are fuzzers focused in c/c++ programs  mostly?</strong></p>
+
+<p>C/C++ is often chosen when speed and efficiency are important and so many key applications. Operating system internals and also web browsers, are written in that language. Taking in count the previous paragraph, implementing bounds checking in any language compiler put an extra instructions in the low-level code evaluation.</p>
+
+<p>That’s the main reason (I think) that makes fuzzers to be focused to c/c++ programs, because there are more “core” programs written in such languages.</p>
+
+<h4 id="java-for-an-instance">Java, for an instance…</h4>
+
+<p><strong>What are the principal java programs exploits ?</strong></p>
+
+<p>Many projects in the past focused on guarding against problems caused by the unsafe nature of C, such as buffer overruns and format string vulnerabilities. However, in recent years, Java has emerged as the language of choice for building large complex Web-based systems, in part because of language safety features that disallow direct memory access and eliminate problems such as buffer overruns. Platforms such as J2EE (Java 2 Enterprise Edition) also promoted the adoption of Java as a language for implementing e-commerce applications such as Web stores, banking sites, etc.</p>
+
+<p>Java is immune to many things that a C programmer would face (buffer overflows are a big example), but it is slower. Java may be more secure locally than C++ but it still has many security weaknesses given its network capabilities. There are many kinds of exploits like this <a target="_blank" href="https://www.exploit-db.com/?platform=java">database</a> shows.</p>
+
+<p>While the Java platform includes numerous features designed to improve the security of Java applications, it’s critical for developers to ensure that their Java code is vulnerability free at the earliest stages of the software development life cycle. Avoiding Java security mistakes such as not restricting access to classes and variables, not finalizing classes, relying on package scoop and others is the best place to start when securing Java code, it’s also important for developers to familiarize themselves with the common security threats facing Java code, as well as Java frameworks.</p>
+
+<p>High-Risk Java Security Vulnerabilities:
+With over 95% of all enterprise desktops in the world running Java, there are serious consequences when vulnerabilities in Java code make it to production and are exploited by malicious parties. The following is a list of some of the high-risk threats facing applications written in Java:</p>
+
+<p><a id="exploits"></a></p>
+
+<ul>
+  <li>Code Injections</li>
+  <li>Command Injections</li>
+  <li>Connection String Injection</li>
+  <li>LDAP Injection</li>
+  <li>Reflected XSS</li>
+  <li>Resource Injection</li>
+  <li>Second Order SQL Injection</li>
+  <li>SQL Injection</li>
+  <li>Stored XSS</li>
+  <li>XPath Injection</li>
+</ul>
+
+<p><strong>Can these exploits/issues be detected with the use of fuzzing ?</strong></p>
+
+<p>Many of the Java programs exploits (SQL code injection, by example) can be treated with fuzzing, even with static analysis tools.</p>
+
+<p>Fuzzing is originally applied to programs that are not memory safe, hoping that we are able to find memory corruption issues. Out of bound read or writes in Java code simply do not result in memory corruption but in more or less harmless Exceptions such as IndexOutOfBoundsException. While it might be desirable to find (code robustness) issues and might result in Denial of Service issues, the severity of these issues is usually low.</p>
+
+<p>The question is what kind of behavior and fuzzing results are we looking for? There are different scenarios that might be of interest, but the attack vector (how does the attacker exploit the issue in the real world?) matters a lot when looking at them.</p>
+
+<p>I think the find of Java program exploits must start from these basic ideas due to low-level JVM security coverage:</p>
+
+<ul>
+  <li>
+    <p>Finding issues such as Denial of Service (DoS), OutOfMemoryExceptions, high CPU load, high disk space usage, or functions that never return.</p>
+  </li>
+  <li>
+    <p>Finding low-severity or non-security issues such as RuntimeExceptions.
+Finding well-known security issues for Java code, such as Java deserialization vulnerabilities, Server Side Request Forgery (SSRF), and External Entity Injection (XXE).</p>
+  </li>
+</ul>
+
+<p>Differential fuzzing may be another good starting point to solve injection issues, because, we have a lot of proved libraries that probably do the same as the desired application to test.</p>
+
+<p><strong>In interpreted languages… Must the interpreter be fuzzed too?</strong></p>
+
+<p>Arbitrary Java code as input for the JVM… This could be helpful in more exotic scenarios, for example when you need to escape from a sandboxed JVM. In most other scenarios this attack vector is probably just unrealistic, as an attacker would be executing Java code already.</p>
+
+<p>What about injecting data in built-in classes (such as strings)? Maybe there is a deep hidden  deserialization issue.</p>
+
+<p>Not the same analysis if we use Javascript as a target. Fuzz javascript interpreters using javascript as inputs could bring better results due to fast browsers evolution and new features appeared.</p>
+
+<h3 id="bibliography">Bibliography</h3>
+
+<ul>
+  <li>[<strong>1</strong>] Fuzzing for software security testing and quality assurance</li>
+  <li>[<strong>2</strong>] RuhrSec 2018 Conferences: Finding security vulnerabilities with modern fuzzing techniques (Rene Freingruber)</li>
+  <li>[<strong>3</strong>] <a id="3" target="_blank" href="https://www.floyd.ch/?p=1090">Java Bugs with and without Fuzzin-AFL-based Java fuzzers and Java Security Manager</a></li>
+  <li>[<strong>4</strong>] <a id="4" href="https://patricegodefroid.github.io/public_psfiles/cacm2012.pdf">SAGE has had a remarkable impact at Microsoft. by Patrice Godefroid, Michael Y. Levin, and David Molnar<a></a></a></li>
+  <li>[<strong>5</strong>] <a id="5" href="http://web.cs.ucdavis.edu/~hchen/paper/chen2018angora.pdf">Angora: Efficent Fuzzing by Principled Search</a></li>
+  <li>[<strong>6</strong>]<a id="6" href="https://suif.stanford.edu/papers/usenixsec05.pdf">Finding Security Vulnerabilities in Java Applications with Static Analysis</a></li>
+  <li>[<strong>7</strong>]<a id="7" href="http://www.aabri.com/manuscripts/131731.pdf">Security vulnerabilities of the top ten programming languages: C, Java, C++, Objective-C, C#, PHP, Visual Basic, Python, Perl, and Ruby</a></li>
+  <li>[<strong>8</strong>]<a id="8" target="_blank" href="https://www.privacyrights.org/data-breaches"><em>Privacy Rights</em><a></a></a></li>
+  <li>[<strong>9</strong>]<a id="9" target="_blank" href="[https://www.privacyrights.org/data-breaches](https://www.blackhat.com/docs/us-17/wednesday/us-17-Aumasson-Automated-Testing-Of-Crypto-Software-Using-Differential-Fuzzing.pdf)">Automated Testing of Crypto Software Using Differential Fuzzing<a></a></a></li>
+  <li>[<strong>10</strong>]<a href="https://www.synopsys.com/software-integrity/security-testing/fuzz-testing.html" target="_blank">Synopsys. Defensics Fuzz Testing</a></li>
+  <li>[<strong>11</strong>] <a href="https://www.fuzzingbook.org" target="_blank">Fuzzing book</a></li>
+  <li>[<strong>12</strong>] <a id="12" href="https://github.com/aflgo/aflgo" target="_blank">AFLGo</a></li>
+  <li>[<strong>13</strong>] <a id="13" href="https://github.com/aflsmart/aflsmart" target="_blank">AFLSmart</a></li>
+</ul>
+
+  </article>
+
+  
+    <div id="disqus_thread"></div>
+    <script type="text/javascript">
+      var disqus_shortname  = 'jacarte-github-io';
+      var disqus_identifier = '/blog/2020/SurveyOnFuzzing';
+      var disqus_title      = "Fuzzing Survey.";
+      (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+      })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  
+
+</div>
+
+    </div>
+
+    <!-- Footer -->
+
+    
+<footer class="fixed-bottom">
+  <div class="container mt-0">
+    &copy; Copyright 2024 Javier  Cabrera Arteaga.
+    Powered by <a href="http://jekyllrb.com/" target="_blank">Jekyll</a> with <a href="https://github.com/alshedivat/al-folio">al-folio</a> theme. Hosted by <a href="https://pages.github.com/" target="_blank">GitHub Pages</a>.
+
+    
+  </div>
+</footer>
+
+
+
+  </body>
+
+  <!-- Load Core and Bootstrap JS -->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha512-/DXTXr6nQodMUiq+IUJYCt2PPOUjrHJ9wFrqpJ3XkgPNOZVfMok7cRw6CSxyCQxXn6ozlESsSh1/sMCTF1rL/g==" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.4.4/umd/popper.min.js" integrity="sha512-eUQ9hGdLjBjY3F41CScH3UX+4JDSI9zXeroz7hJ+RteoCaY+GP/LDoM8AO+Pt+DRFw3nXqsjh9Zsts8hnYv8/A==" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" integrity="sha512-M5KW3ztuIICmVIhjSqXe01oV2bpe248gOxqmlcYrEzAvws7Pw3z6BK0iGbrwvdrUQUhi3eXgtxp5I8PDo9YfjQ==" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mdbootstrap/4.19.1/js/mdb.min.js"  integrity="sha512-Mug9KHKmroQFMLm93zGrjhibM2z2Obg9l6qFG2qKjXEXkMp/VDkI4uju9m4QKPjWSwQ6O2qzZEnJDEeCw0Blcw==" crossorigin="anonymous"></script>
+
+<!-- Load Common JS -->
+<script src="/assets/js/common.js"></script>
+
+<!-- Code Syntax Highlighting -->
+<link rel="stylesheet" href="https://gitcdn.link/repo/jwarby/jekyll-pygments-themes/master/.css" />
+
+
+<!-- Load KaTeX -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/katex.min.css" integrity="sha512-h7nl+xz8wgDlNM4NqKEM4F1NkIRS17M9+uJwIGwuo8vGqIl4BhuCKdxjWEINm+xyrUjNCnK5dCrhM0sj+wTIXw==" crossorigin="anonymous" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.12.0/katex.min.js" integrity="sha512-/CMIhXiDA3m2c9kzRyd97MTb3MC6OVnx4TElQ7fkkoRghwDf6gi41gaT1PwF270W6+J60uTmwgeRpNpJdRV6sg==" crossorigin="anonymous"></script>
+<script src="/assets/js/katex.js"></script>
+
+
+
+<!-- Load Mansory & imagesLoaded -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/masonry/4.2.2/masonry.pkgd.min.js" integrity="" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/imagesloaded@4/imagesloaded.pkgd.min.js"></script>
+
+<!-- Project Cards Layout -->
+<script type="text/javascript">
+  // Init Masonry
+  var $grid = $('.grid').masonry({
+    gutter: 10,
+    horizontalOrder: true,
+    itemSelector: '.grid-item',
+  });
+  // layout Masonry after each image loads
+  $grid.imagesLoaded().progress( function() {
+    $grid.masonry('layout');
+  });
+</script>
+
+
+
+<!-- Enable Tooltips -->
+<script type="text/javascript">
+$(function () {
+  $('[data-toggle="tooltip"]').tooltip()
+})
+</script>
+
+
+
+<!-- Google Analytics -->
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-127898106-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+
+</html>
