@@ -8,7 +8,8 @@ jobs:
     # This job runs on Linux
     runs-on: ubuntu-20.04
     container:
-      image: ruby:3.3.7-bookworm
+      image: ruby:2.7.8-slim-buster
+
     steps:
       # Add the building of the CV here as well
       - uses: actions/checkout@v2
