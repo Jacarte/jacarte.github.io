@@ -20,7 +20,7 @@ jobs:
           git config --global user.name "jacarte"
           git config --global credential.helper cache
           git config --global --add safe.directory /__w/jacarte.github.io/jacarte.github.io
-          sudo chmod -R 777 /__w/jacarte.github.io/jacarte.github.io || echo No
+          chmod -R 777 /__w/jacarte.github.io/jacarte.github.io || echo No
           #echo "en_US UTF-8" > /etc/locale.gen
           #locale-gen en_US.UTF-8
           export LANG=en_US.UTF-8
