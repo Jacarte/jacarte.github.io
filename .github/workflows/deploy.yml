@@ -8,10 +8,7 @@ jobs:
     # This job runs on Linux
     runs-on: ubuntu-20.04
     container:
-      image: ghcr.io/jacarte/latex-build:latest14
-      credentials:
-        username: jacarte
-        password: ${{  secrets.DOCKER_CONTAINER_REGISTRY_TOKEN }}
+      image: ruby:3.3.7-bookworm
     steps:
       # Add the building of the CV here as well
       - uses: actions/checkout@v2
