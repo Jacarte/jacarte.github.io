@@ -21,7 +21,7 @@ years: [2024, 2023, 2022, 2021, 2020, 2019]
 
 I earned my Master's Degree in Computer Science from the University of Havana, Cuba, in 2016. Since 2019, I've been furthering my academic journey, earning my PhD degree at the esteemed KTH Royal Institute of Technology, specializing in <a href="https://www.jacarte.me/thesis/">Software Diversification</a> to enhance reliability and security, with a primary emphasis on WebAssembly.
 
-I am a Software Engineer at [Hopsworks AB](https://www.hopsworks.ai/). I joined a common dream and effort to "Build, Maintain, and Monitor ML Systems", also making ML accessible to everyone.
+I am a Senior Software Engineer at [Sinch](https://sinch.com/). 
 
 <h2>Logs</h2>
 <div class="collab">
