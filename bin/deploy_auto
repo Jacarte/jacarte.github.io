@@ -3,7 +3,7 @@
 # Run this script to deploy the app to Github Pages
 
 # Parse cmd arguments
-
+set -x 
 SRC_BRANCH="master"
 DEPLOY_BRANCH="gh-pages"
 
