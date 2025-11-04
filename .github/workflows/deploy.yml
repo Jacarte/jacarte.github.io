@@ -6,7 +6,7 @@ jobs:
   build:
     name: Build document
     # This job runs on Linux
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     container:
       image: jekyll/jekyll
 
@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: Deploy document
         run: |
-          
+
           git config --global user.email "xppcoder@gmail.com"
           git config --global user.name "jacarte"
           git config --global credential.helper cache
@@ -27,6 +27,6 @@ jobs:
           export LANGUAGE=en_US:en
           export LC_ALL=en_US.UTF-8
 
-          bash ./bin/deploy_auto 
+          bash ./bin/deploy_auto
         env:
           REPO_KEY: '${{ secrets.REPO_KEY2 }}'
