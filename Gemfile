@@ -6,8 +6,7 @@ if RUBY_VERSION =~ /1.9/
 end
   
 group :jekyll_plugins do
-    gem 'github-pages'
-    gem 'jekyll'
+    gem 'jekyll', '~> 4.0'
     gem 'jekyll-email-protect'
     gem 'jekyll-paginate-v2'
     gem 'jekyll-scholar'
