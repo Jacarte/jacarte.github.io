@@ -8,7 +8,7 @@ jobs:
     # This job runs on Linux
     runs-on: ubuntu-22.04
     container:
-      image: jekyll/jekyll
+      image: jekyll/jekyll:4.0
 
     steps:
       # Add the building of the CV here as well
