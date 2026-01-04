@@ -6,6 +6,6 @@ description:
 nav: true
 ---
 
-<iframe class="CV" src="/assets/pdf/THE_CV.pdf">
+<iframe class="CV" src="/assets/pdf/THE_CV_6.pdf">
 
 </iframe>
