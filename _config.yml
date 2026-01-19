@@ -4,9 +4,9 @@
 
 title: blank # the website title (if blank, full name will be used instead)
 first_name: Javier
-middle_name: 
+middle_name:
 last_name: Cabrera Arteaga
-email: javierca@kth.se
+email: jacarte9212@gmail.com
 description: > # the ">" symbol means to ignore newlines until "footer_text:"
   Personal blog
 footer_text: >
@@ -87,7 +87,7 @@ collections:
   projects:
     output: true
     permalink: /projects/:path/
-  
+
   publications:
     output: true
     permalink: /publications/:path/
