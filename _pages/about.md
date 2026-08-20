@@ -8,20 +8,20 @@ profile:
   align: right
   image: prof_pic2.jpg
   address: >
-    <p>Lindhagensgatan 112</p>
-    <p>11251 Stockholm, Sweden</p>
+    <p>Rådmansgatan 40</p>
+    <p>Stockholm, Sweden</p>
 
 
 news: false  # includes a list of news items
 selected_papers: true # includes a list of papers marked as "selected={true}"
 social: true  # includes social icons at the bottom of the page
-years: [2024, 2023, 2022, 2021, 2020, 2019]
+years: [2025, 2024, 2023, 2022, 2021, 2020, 2019]
 ---
  <h2>About me</h2>
 
-I earned my Master's Degree in Computer Science from the University of Havana, Cuba, in 2016. Since 2019, I've been furthering my academic journey, earning my PhD degree at the esteemed KTH Royal Institute of Technology, specializing in <a href="https://www.jacarte.me/thesis/">Software Diversification</a> to enhance reliability and security, with a primary emphasis on WebAssembly.
+I've earned my PhD degree at KTH Royal Institute of Technology, specializing in Automated Testing, Artificial Program Synthesis and <a href="https://www.jacarte.me/thesis/">Software Diversification</a> to enhance reliability and security.
 
-I am a Senior Software Engineer at [Sinch](https://sinch.com/). I do voice bots, lots of AI and audio streaming ;)
+I am a Senior Software Engineer at [Trustly](https://www.trustly.com/). I do low latency systems and lots of AI ;)
 
 <h2>Logs</h2>
 <div class="collab">
