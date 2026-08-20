@@ -8,7 +8,7 @@ profile:
   align: right
   image: prof_pic2.jpg
   address: >
-    <p>Rådmansgatan 40</p>
+    <p>Radmansgatan 40</p>
     <p>Stockholm, Sweden</p>
 
 
@@ -21,7 +21,7 @@ years: [2025, 2024, 2023, 2022, 2021, 2020, 2019]
 
 I've earned my PhD degree at KTH Royal Institute of Technology, specializing in Automated Testing, Artificial Program Synthesis and <a href="https://www.jacarte.me/thesis/">Software Diversification</a> to enhance reliability and security.
 
-I am a Senior Software Engineer at [Trustly](https://www.trustly.com/). I do low latency systems and lots of AI ;)
+I am a Senior Software Engineer at [Trustly](https://www.trustly.com/). I do low latency systems and lots of AI.
 
 <h2>Logs</h2>
 <div class="collab">
