@@ -12,7 +12,7 @@ jobs:
 
     steps:
       # Add the building of the CV here as well
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v6
       - name: Deploy document
         run: |
 
