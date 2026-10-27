@@ -9,6 +9,9 @@ jobs:
     runs-on: ubuntu-22.04
     container:
       image: jekyll/jekyll:4.4
+    env:
+      # BibTeX uses Ruby's default encoding; the image lacks en_US.UTF-8.
+      RUBYOPT: "-EUTF-8"
 
     steps:
       # Add the building of the CV here as well
@@ -21,12 +24,6 @@ jobs:
           git config --global credential.helper cache
           git config --global --add safe.directory /__w/jacarte.github.io/jacarte.github.io
           chmod -R 777 /__w/jacarte.github.io/jacarte.github.io || echo No
-          #echo "en_US UTF-8" > /etc/locale.gen
-          #locale-gen en_US.UTF-8
-          export LANG=en_US.UTF-8
-          export LANGUAGE=en_US:en
-          export LC_ALL=en_US.UTF-8
-
           bash ./bin/deploy_auto
         env:
           REPO_KEY: '${{ secrets.REPO_KEY2 }}'
